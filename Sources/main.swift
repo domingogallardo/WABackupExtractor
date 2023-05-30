@@ -9,7 +9,7 @@ import SwiftWABackupAPI
 
 let api = WABackup()
 
-print ("Has local backups: \(api.hasLocalBackup())")
+print ("Has local backups: \(api.hasLocalBackups())")
 if let getLocalBackups = api.getLocalBackups() {
     for backup in getLocalBackups {
         print("Backup path: \(backup.path)")
