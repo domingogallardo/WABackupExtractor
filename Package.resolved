@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "sqlite.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/stephencelis/SQLite.swift.git",
+      "state" : {
+        "revision" : "7a2e3cd27de56f6d396e84f63beefd0267b55ccb",
+        "version" : "0.14.1"
+      }
+    },
+    {
+      "identity" : "swiftwabackupapi",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/domingogallardo/SwiftWABackupAPI.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "a9abc4dbda5535a7802f73bcf85ea3ac27508c2d"
+      }
+    }
+  ],
+  "version" : 2
+}
