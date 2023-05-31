@@ -7,8 +7,9 @@ let package = Package(
     name: "WABackupViewer",
     dependencies: [
         .package(
-              url: "https://github.com/domingogallardo/SwiftWABackupAPI.git", 
-              branch: "main"
+//            url: "https://github.com/domingogallardo/SwiftWABackupAPI.git", 
+//            branch: "main"
+              path: "../SwiftWABackupAPI"
         ),
     ],
     targets: [
