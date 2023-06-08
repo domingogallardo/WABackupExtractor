@@ -27,9 +27,9 @@ for backup in backups {
 }
 let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first!
 print("Obtained to the most recent backup: \(mostRecentBackup.identifier)")
-if let chatDb = api.connectChatStorageDb(from: mostRecentBackup) {
+if api.connectChatStorageDb(from: mostRecentBackup) {
     print("Obtained the WhatsApp chat database")
-    if let chats = api.getChats(from: chatDb) {
+    if let chats = api.getChats(from: mostRecentBackup) {
         print("Found \(chats.count) chats")
         for chat in chats {
             print(chat)
