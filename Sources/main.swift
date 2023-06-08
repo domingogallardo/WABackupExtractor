@@ -8,10 +8,6 @@
 import Foundation
 import SwiftWABackupAPI
 
-for argument in CommandLine.arguments {
-    print("Argument: \(argument)")
-}
-
 let api = WABackup()
 
 let backups = api.getLocalBackups()
@@ -21,18 +17,29 @@ guard backups.count > 0 else {
     exit(1)
 }
 
-print("Found backups")
+/*
 for backup in backups {
     print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
 }
+*/
+
 let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first!
-print("Obtained to the most recent backup: \(mostRecentBackup.identifier)")
 if api.connectChatStorageDb(from: mostRecentBackup) {
-    print("Obtained the WhatsApp chat database")
     if let chats = api.getChats(from: mostRecentBackup) {
-        print("Found \(chats.count) chats")
-        for chat in chats {
-            print(chat)
+
+        // Encoding chats to JSON
+        let jsonEncoder = JSONEncoder()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        jsonEncoder.dateEncodingStrategy = .formatted(formatter)
+        jsonEncoder.outputFormatting = .prettyPrinted // Optional: if you want the JSON output to be indented
+        do {
+            let jsonData = try jsonEncoder.encode(chats)
+
+            let jsonString = String(data: jsonData, encoding: .utf8)
+            print(jsonString ?? "Failed to convert JSON data to string")
+        } catch {
+            print("Failed to encode chats to JSON: \(error)")
         }
     } else {
         print("No chats")
