@@ -37,5 +37,3 @@ if let chats = api.getChats() {
 } else {
     print("No chats")
 }
-
-
