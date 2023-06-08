@@ -6,11 +6,7 @@ import PackageDescription
 let package = Package(
     name: "WABackupViewer",
     dependencies: [
-        .package(
-//            url: "https://github.com/domingogallardo/SwiftWABackupAPI.git", 
-//            branch: "main"
-              path: "../SwiftWABackupAPI"
-        ),
+        .package(path: "../SwiftWABackupAPI"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
