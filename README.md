@@ -3,4 +3,4 @@
 **Notice: Early Development Stage**
 
 Command line MacOS Swift aplication that uses the [SwiftWABackupAPI](https://github.com/domingogallardo/SwiftWABackupAPI)
-to explore a WhatsApp iPhone backup.
+to explore your WhatsApp chats in an unencrypted iPhone backup.
