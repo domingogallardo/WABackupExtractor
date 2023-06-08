@@ -26,16 +26,18 @@ for backup in backups {
     print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
 }
 let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first!
-print("Connecting to the most recent backup: \(mostRecentBackup.identifier)")
-api.connectChatStorageDb(backupPath: mostRecentBackup.path)
-print("Connected to the most recent backup")
-if let chats = api.getChats() {
-    print("Found \(chats.count) chats")
-    for chat in chats {
-        print(chat)
+print("Obtained to the most recent backup: \(mostRecentBackup.identifier)")
+if let chatDb = api.connectChatStorageDb(from: mostRecentBackup) {
+    print("Obtained the WhatsApp chat database")
+    if let chats = api.getChats(from: chatDb) {
+        print("Found \(chats.count) chats")
+        for chat in chats {
+            print(chat)
+        }
+    } else {
+        print("No chats")
     }
 } else {
-    print("No chats")
+    print("Failed to connect to the most recent backup")
 }
-
 
