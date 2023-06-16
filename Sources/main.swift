@@ -8,21 +8,33 @@
 import Foundation
 import SwiftWABackupAPI
 
-
 func printUsage() {
-    print("Usage: WABackupViewer -o <output_filename>")
+    print("Usage: WABackupViewer -o <output_filename> [-b <backup_id>]")
 }
 
+
 var outputFilename = "chats.json" // Default output filename
+var backupId: String? = nil // Variable to hold backup ID
 
 // Parse command line arguments
-for i in 0..<CommandLine.arguments.count {
+var i = 0
+while i < CommandLine.arguments.count {
     switch CommandLine.arguments[i] {
     case "-o":
         if i + 1 < CommandLine.arguments.count {
             outputFilename = CommandLine.arguments[i + 1]
+            i += 1
         } else {
             print("Error: -o flag requires a subsequent filename argument")
+            printUsage()
+            exit(1)
+        }
+    case "-b":
+        if i + 1 < CommandLine.arguments.count {
+            backupId = CommandLine.arguments[i + 1]
+            i += 1
+        } else {
+            print("Error: -b flag requires a subsequent backup ID argument")
             printUsage()
             exit(1)
         }
@@ -33,41 +45,44 @@ for i in 0..<CommandLine.arguments.count {
             exit(1)
         }
     }
+    i += 1
 }
+
+
 
 let api = WABackup()
-
 let backups = api.getLocalBackups()
 
-guard backups.count > 0 else {
-    print("No backups")
-    exit(1)
-}
-
+// Show the available backups
 print("Found backups:")
-
 for backup in backups {
     print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
 }
 
-guard let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first else {
+// Select the backup
+let selectedBackup: IPhoneBackup
+if let backupId = backupId, let backup = backups.first(where: { $0.identifier == backupId }) {
+    selectedBackup = backup
+    print("Using backup with ID \(backupId)")
+} else if let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first {
+    selectedBackup = mostRecentBackup
+    print("Using most recent backup with ID \(mostRecentBackup.identifier)")
+} else {
     print("No backups available")
     exit(1)
 }
 
-guard api.connectChatStorageDb(from: mostRecentBackup) else {
+guard api.connectChatStorageDb(from: selectedBackup) else {
     print("Failed to connect to the most recent backup")
     exit(1)
 }
 
-let chats = api.getChats(from: mostRecentBackup)
+let chats = api.getChats(from: selectedBackup)
 
 guard !chats.isEmpty  else {
     print("No chats")
     exit(1)
 }
-
-print("Most recent backup: \(mostRecentBackup.creationDate)")
 
 // Encoding chats to JSON
 let jsonEncoder = JSONEncoder()
