@@ -8,6 +8,33 @@
 import Foundation
 import SwiftWABackupAPI
 
+
+func printUsage() {
+    print("Usage: WABackupViewer -o <output_filename>")
+}
+
+var outputFilename = "chats.json" // Default output filename
+
+// Parse command line arguments
+for i in 0..<CommandLine.arguments.count {
+    switch CommandLine.arguments[i] {
+    case "-o":
+        if i + 1 < CommandLine.arguments.count {
+            outputFilename = CommandLine.arguments[i + 1]
+        } else {
+            print("Error: -o flag requires a subsequent filename argument")
+            printUsage()
+            exit(1)
+        }
+    default:
+        if i != 0 { // Ignore the program name itself
+            print("Error: Unexpected argument \(CommandLine.arguments[i])")
+            printUsage()
+            exit(1)
+        }
+    }
+}
+
 let api = WABackup()
 
 let backups = api.getLocalBackups()
@@ -53,8 +80,9 @@ do {
     let jsonData = try jsonEncoder.encode(chats)
     if let jsonString = String(data: jsonData, encoding: .utf8) {
         do {
-            try jsonString.write(toFile: "chats.json", atomically: true, encoding: .utf8)
-            print("Info about \(chats.count) chats saved to file chats.json")
+            let outputUrl = URL(fileURLWithPath: outputFilename)
+            try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
+            print("Info about \(chats.count) chats saved to file \(outputFilename)")
         } catch {
             print("Failed to save chats info: \(error)")
         }
@@ -64,4 +92,3 @@ do {
 } catch {
     print("Failed to encode chats to JSON: \(error)")
 }
-
