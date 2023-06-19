@@ -12,7 +12,6 @@ func printUsage() {
     print("Usage: WABackupViewer -o <output_filename> [-b <backup_id>]")
 }
 
-
 var outputFilename = "chats.json" // Default output filename
 var backupId: String? = nil // Variable to hold backup ID
 
@@ -48,25 +47,34 @@ while i < CommandLine.arguments.count {
     i += 1
 }
 
-
-
 let api = WABackup()
 let backups = api.getLocalBackups()
 
-// Show the available backups
-print("Found backups:")
-for backup in backups {
-    print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
-}
-
 // Select the backup
 let selectedBackup: IPhoneBackup
-if let backupId = backupId, let backup = backups.first(where: { $0.identifier == backupId }) {
-    selectedBackup = backup
-    print("Using backup with ID \(backupId)")
-} else if let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first {
-    selectedBackup = mostRecentBackup
-    print("Using most recent backup with ID \(mostRecentBackup.identifier)")
+if backups.count > 1 {
+    print("Found backups:")
+    for backup in backups {
+        print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
+    }
+
+    if let backupId = backupId, let backup = backups.first(where: { $0.identifier == backupId }) {
+        selectedBackup = backup
+        print("Using backup with ID \(backupId)")
+        print("    The output file can be specified with the -o <output_filename> option")
+    } else if let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first {
+        selectedBackup = mostRecentBackup
+        print("Using most recent backup with ID \(mostRecentBackup.identifier)")
+        print("    You can specify the backup to use with the -b <backup_id> option")
+        print("    The output file can be specified with the -o <output_filename> option")
+    } else {
+        print("No backups available")
+        exit(1)
+    }
+} else if let onlyBackup = backups.first {
+    selectedBackup = onlyBackup
+    print("Using the only available backup with ID \(onlyBackup.identifier)")
+    print("    The output file can be specified with the -o <output_filename> option")
 } else {
     print("No backups available")
     exit(1)
@@ -97,7 +105,7 @@ do {
         do {
             let outputUrl = URL(fileURLWithPath: outputFilename)
             try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
-            print("Info about \(chats.count) chats saved to file \(outputFilename)")
+            print(">>> Info about \(chats.count) chats saved to file \(outputFilename)")
         } catch {
             print("Failed to save chats info: \(error)")
         }
