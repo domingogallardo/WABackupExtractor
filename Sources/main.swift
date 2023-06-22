@@ -97,7 +97,7 @@ guard api.connectChatStorageDb(from: selectedBackup) else {
 }
 
 if let chatId = chatId {
-    let messages = api.getChatMessages(id: chatId, from: selectedBackup)
+    let messages = api.getChatMessages(chatId: chatId, from: selectedBackup)
     if messages.count > 1 {
         outputMessages(messages: messages, to: "chat_\(chatId).json")
     } else {
