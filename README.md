@@ -37,7 +37,10 @@ sudo cp .build/release/WABackupViewer /usr/local/bin/WABackupViewer
 
 ## Usage
 
-The basic usage of the application is as follows:
+First, you have to make a _unencrypted_ backup of your iPhone in your Mac. Just connect the iPhone to the Mac, 
+select it in the Finder and make a backup of the device.
+
+Once installed the application, its basic usage is as follows:
 
 ```bash
 WABackupViewer [-b <backup_id>] [-c <chat_id>] [-o <output_filename>]
