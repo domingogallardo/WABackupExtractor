@@ -1,6 +1,6 @@
 # WABackupViewer
 
-WABackupViewer is a Swift command-line macOS application that allows you to backup your WhatsApp messages. The application uses the [`SwiftWABackupAPI`](https://github.com/domingogallardo/SwiftWABackupAPI), which is also developed and maintained by us.
+`WABackupViewer` is a Swift command-line macOS application that allows you to backup your WhatsApp messages. The application uses the [`SwiftWABackupAPI`](https://github.com/domingogallardo/SwiftWABackupAPI), which is also developed and maintained by us.
 
 The application can access iPhone backups in the `~/Library/Application Support/MobileSync/Backup/` directory and extract chat messages or chat metadata.
 
