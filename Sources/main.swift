@@ -5,6 +5,10 @@
 //  Created by Domingo Gallardo on 24/05/23.
 //
 
+//  The aplication needs permission to access the iPhone backup in 
+//   ~/Library/Application Support/MobileSync/Backup/
+//  Go to System Preferences -> Security & Privacy -> Full Disk Access
+
 import Foundation
 import SwiftWABackupAPI
 
