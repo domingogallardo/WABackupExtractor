@@ -72,6 +72,6 @@ WABackupViewer -b abcd1234 -c 226
 
 The messages will be in JSON format in the file `chat_226.json`.
 
-*Please notice that the application and the library are in very early development stage*
+**Please notice that the application and the library are in very early development stage**
 
 Enjoy using WABackupViewer!
