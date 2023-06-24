@@ -6,7 +6,8 @@ The application can access iPhone backups in the `~/Library/Application Support/
 
 ## Prerequisites
 
-You need the Swift language toolkit installed in your Mac. You can install Xcode or the _Xcode Command Line Tools_ with the command:
+You need the Swift language toolkit installed in your Mac. You can install Xcode or the 
+_Xcode Command Line Tools_ with the command:
 
 ```bash
 xcode-select --install
@@ -14,7 +15,9 @@ xcode-select --install
 
 Once installed we can run Swift compiler from the terminal.
 
-Also, make sure you've given the application permission to access the iPhone backup files. You can do this by going to System Preferences -> Security & Privacy -> Full Disk Access and grant the permission to the `Terminal` application.
+Also, make sure you've given the application permission to access the iPhone backup files. 
+You can do this by going to `System Preferences -> Security & Privacy -> Full Disk Access` 
+and grant the permission to the `Terminal` application.
 
 ## Installation
 
@@ -26,7 +29,7 @@ git clone https://github.com/domingogallardo/WABackupViewer.git
 
 Build and install the application using Swift build system:
 
-````
+```bash
 cd WABackupViewer
 swift build -c release
 sudo cp .build/release/WABackupViewer /usr/local/bin/WABackupViewer
@@ -42,9 +45,13 @@ WABackupViewer [-b <backup_id>] [-c <chat_id>] [-o <output_filename>]
 
 Where:
 
-- `-b <backup_id>`: specify the backup ID you want to extract the messages from. If more than one backup exists and no backup ID is provided, the application will automatically choose the most recent backup.
+- `-b <backup_id>`: specify the backup ID you want to extract the messages from. If more than 
+   one backup exists and no backup ID is provided, the application will automatically choose the 
+   most recent backup.
 - `-c <chat_id>`: specify the chat ID from which you want to extract the messages.
-- `-o <output_filename>`: specify the output filename for the JSON file with the chats information or messages. If no filename is provided, the default filename will be `chats.json` for the chats information or `chat_<id>.json` for the messages information.
+- `-o <output_filename>`: specify the output filename for the JSON file with the chats information 
+   or messages. If no filename is provided, the default filename will be `chats.json` for the chats 
+   information or `chat_<id>.json` for the messages information.
 
 ## Example Usage
 
