@@ -62,36 +62,35 @@ while i < CommandLine.arguments.count {
     i += 1
 }
 
-let fullPathOutputDirectory: String
+let outputDirectoryPath: String
 if outputDirectory.hasPrefix("/") {
-    fullPathOutputDirectory = outputDirectory
+    outputDirectoryPath = outputDirectory
 } else {
-    fullPathOutputDirectory = FileManager.default.currentDirectoryPath + "/" + outputDirectory
+    outputDirectoryPath = FileManager.default.currentDirectoryPath + "/" + outputDirectory
 }
 
 do {
-    try FileManager.default.createDirectory(atPath: fullPathOutputDirectory, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(atPath: outputDirectoryPath, withIntermediateDirectories: true)
 } catch {
     print("Error: Failed to create output directory \(outputDirectory): \(error)")
     exit(1)
 }
 
 let api = WABackup()
-let backups = api.getLocalBackups()
+let availableBackups = api.getLocalBackups()
 
-// Select the backup
-let selectedBackup: IPhoneBackup
-if backups.count > 1 {
+let backupToUse: IPhoneBackup
+if availableBackups.count > 1 {
     print("Found backups:")
-    for backup in backups {
+    for backup in availableBackups {
         print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
     }
-    if let backupId = backupId, let backup = backups.first(where: { $0.identifier == backupId }) {
-        selectedBackup = backup
+    if let backupId = backupId, let backup = availableBackups.first(where: { $0.identifier == backupId }) {
+        backupToUse = backup
         print("Using backup with ID \(backupId)")
         printUsage()
-    } else if let mostRecentBackup = backups.sorted(by: { $0.creationDate > $1.creationDate }).first {
-        selectedBackup = mostRecentBackup
+    } else if let mostRecentBackup = availableBackups.sorted(by: { $0.creationDate > $1.creationDate }).first {
+        backupToUse = mostRecentBackup
         print("Using most recent backup with ID \(mostRecentBackup.identifier)")
         printUsage()
 
@@ -100,8 +99,8 @@ if backups.count > 1 {
         printUsage()
         exit(1)
     }
-} else if let onlyBackup = backups.first {
-    selectedBackup = onlyBackup
+} else if let onlyBackup = availableBackups.first {
+    backupToUse = onlyBackup
     print("Using the only available backup with ID \(onlyBackup.identifier)")
     printUsage()
 } else {
@@ -110,22 +109,22 @@ if backups.count > 1 {
     exit(1)
 }
 
-guard api.connectChatStorageDb(from: selectedBackup) else {
+guard api.connectChatStorageDb(from: backupToUse) else {
     print("Failed to connect to the most recent backup")
     exit(1)
 }
 
 if let chatId = chatId {
-    let messages = api.getChatMessages(chatId: chatId, from: selectedBackup)
+    let messages = api.getChatMessages(chatId: chatId, from: backupToUse)
     if messages.count > 1 {
         let outputFilename = "chat_\(chatId).json"
-        outputMessages(messages: messages, to: outputFilename)
+        outputMessagesJSON(messages: messages, to: outputFilename)
     } else {
         print ("No messages available")
         exit(1)
     }
 } else {
-    let chats = api.getChats(from: selectedBackup)
+    let chats = api.getChats(from: backupToUse)
     if chats.count > 1 {
         let outputFilename = "chats.json"
         outputChatsJSON(chats: chats, to: outputFilename)
@@ -135,7 +134,7 @@ if let chatId = chatId {
     }    
 }
 
-func outputMessages(messages: [MessageInfo], to outputFilename: String) {
+func outputMessagesJSON(messages: [MessageInfo], to outputFilename: String) {
     let jsonEncoder = JSONEncoder()
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -146,7 +145,7 @@ func outputMessages(messages: [MessageInfo], to outputFilename: String) {
         let jsonData = try jsonEncoder.encode(messages)
         if let jsonString = String(data: jsonData, encoding: .utf8) {
             do {
-                let outputUrl = URL(fileURLWithPath: fullPathOutputDirectory).appendingPathComponent(outputFilename)
+                let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
                 try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
                 print(">>> \(messages.count) messages saved to file \(outputUrl.path)")
             } catch {
@@ -171,7 +170,7 @@ func outputChatsJSON(chats: [ChatInfo], to outputFilename: String) {
         let jsonData = try jsonEncoder.encode(chats)
         if let jsonString = String(data: jsonData, encoding: .utf8) {
             do {
-                let outputUrl = URL(fileURLWithPath: fullPathOutputDirectory).appendingPathComponent(outputFilename)
+                let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
                 try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
                 print(">>> Info about \(chats.count) chats saved to file \(outputUrl.path)")
             } catch {
