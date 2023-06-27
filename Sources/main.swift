@@ -12,11 +12,12 @@
 import Foundation
 import SwiftWABackupAPI
 
+
 func printUsage() {
-    print("Usage: WABackupViewer  [-b <backup_id>] [-c <chat_id>] [-o <output_filename>]")
+    print("Usage: WABackupViewer  [-b <backup_id>] [-c <chat_id>] [-o <output_directory>]")
 }
 
-var outputFilename = "chats.json" // Default output filename
+var outputDirectory = "WABackup" // Default output directory
 var backupId: String? = nil // Variable to hold backup ID
 var chatId: Int? = nil // Variable to hold chat ID
 
@@ -26,10 +27,10 @@ while i < CommandLine.arguments.count {
     switch CommandLine.arguments[i] {
     case "-o":
         if i + 1 < CommandLine.arguments.count {
-            outputFilename = CommandLine.arguments[i + 1]
+            outputDirectory = CommandLine.arguments[i + 1]
             i += 1
         } else {
-            print("Error: -o flag requires a subsequent filename argument")
+            print("Error: -o flag requires a subsequent directory name argument")
             printUsage()
             exit(1)
         }
@@ -59,6 +60,20 @@ while i < CommandLine.arguments.count {
         }
     }
     i += 1
+}
+
+let fullPathOutputDirectory: String
+if outputDirectory.hasPrefix("/") {
+    fullPathOutputDirectory = outputDirectory
+} else {
+    fullPathOutputDirectory = FileManager.default.currentDirectoryPath + "/" + outputDirectory
+}
+
+do {
+    try FileManager.default.createDirectory(atPath: fullPathOutputDirectory, withIntermediateDirectories: true)
+} catch {
+    print("Error: Failed to create output directory \(outputDirectory): \(error)")
+    exit(1)
 }
 
 let api = WABackup()
@@ -103,7 +118,8 @@ guard api.connectChatStorageDb(from: selectedBackup) else {
 if let chatId = chatId {
     let messages = api.getChatMessages(chatId: chatId, from: selectedBackup)
     if messages.count > 1 {
-        outputMessages(messages: messages, to: "chat_\(chatId).json")
+        let outputFilename = "chat_\(chatId).json"
+        outputMessages(messages: messages, to: outputFilename)
     } else {
         print ("No messages available")
         exit(1)
@@ -111,6 +127,7 @@ if let chatId = chatId {
 } else {
     let chats = api.getChats(from: selectedBackup)
     if chats.count > 1 {
+        let outputFilename = "chats.json"
         outputChatsJSON(chats: chats, to: outputFilename)
     } else {
         print ("No chats available")
@@ -129,9 +146,9 @@ func outputMessages(messages: [MessageInfo], to outputFilename: String) {
         let jsonData = try jsonEncoder.encode(messages)
         if let jsonString = String(data: jsonData, encoding: .utf8) {
             do {
-                let outputUrl = URL(fileURLWithPath: outputFilename)
+                let outputUrl = URL(fileURLWithPath: fullPathOutputDirectory).appendingPathComponent(outputFilename)
                 try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
-                print(">>> \(messages.count) messages saved to file \(outputFilename)")
+                print(">>> \(messages.count) messages saved to file \(outputUrl.path)")
             } catch {
                 print("Failed to save messages: \(error)")
             }
@@ -154,9 +171,9 @@ func outputChatsJSON(chats: [ChatInfo], to outputFilename: String) {
         let jsonData = try jsonEncoder.encode(chats)
         if let jsonString = String(data: jsonData, encoding: .utf8) {
             do {
-                let outputUrl = URL(fileURLWithPath: outputFilename)
+                let outputUrl = URL(fileURLWithPath: fullPathOutputDirectory).appendingPathComponent(outputFilename)
                 try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
-                print(">>> Info about \(chats.count) chats saved to file \(outputFilename)")
+                print(">>> Info about \(chats.count) chats saved to file \(outputUrl.path)")
             } catch {
                 print("Failed to save chats info: \(error)")
             }
