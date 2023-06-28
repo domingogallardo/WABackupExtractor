@@ -49,7 +49,7 @@ your Mac. Simply connect the iPhone to the Mac, select it in the Finder and make
 After the application is installed, you can use it as follows:
 
 ```bash
-WABackupViewer [-b <backup_id>] [-c <chat_id>] [-o <output_directory>]
+WABackupViewer [-b <backup_id>] [-c <chat_id>] [-o <output_directory>] [-all]
 ```
 
 By default, the application will create a `WABackup` directory and save the file `chats.json`, 
@@ -64,6 +64,7 @@ then be saved in the output directory.
 The output directory can be customized using the `-o <output_directory>` flag. It 
 can either be an absolute path, starting with a slash, or a relative path to the current directory.
 
+The flag `-all` saves all the chats.
 
 ## Example Usage
 
