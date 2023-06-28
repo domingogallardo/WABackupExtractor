@@ -20,6 +20,7 @@ func printUsage() {
 var outputDirectory = "WABackup" // Default output directory
 var backupId: String? = nil // Variable to hold backup ID
 var chatId: Int? = nil // Variable to hold chat ID
+var allChats = false // Variable to hold whether to output all chats or just one
 
 // Parse command line arguments
 var i = 0
@@ -52,6 +53,9 @@ while i < CommandLine.arguments.count {
             printUsage()
             exit(1)
         }
+    case "-all":
+        allChats = true
+        chatId = nil
     default:
         if i != 0 { // Ignore the program name itself
             print("Error: Unexpected argument \(CommandLine.arguments[i])")
@@ -128,6 +132,18 @@ if let chatId = chatId {
     if chats.count > 1 {
         let outputFilename = "chats.json"
         outputChatsJSON(chats: chats, to: outputFilename)
+        if allChats {
+            for chat in chats {
+                let messages = api.getChatMessages(chatId: chat.id, from: backupToUse)
+                if messages.count > 1 {
+                    let outputFilename = "chat_\(chat.id).json"
+                    outputMessagesJSON(messages: messages, to: outputFilename)
+                } else {
+                    print ("No messages available")
+                    exit(1)
+                }
+            }
+        }
     } else {
         print ("No chats available")
         exit(1)
