@@ -73,12 +73,7 @@ if outputDirectory.hasPrefix("/") {
     outputDirectoryPath = FileManager.default.currentDirectoryPath + "/" + outputDirectory
 }
 
-do {
-    try FileManager.default.createDirectory(atPath: outputDirectoryPath, withIntermediateDirectories: true)
-} catch {
-    print("Error: Failed to create output directory \(outputDirectory): \(error)")
-    exit(1)
-}
+createDirectory(path: outputDirectoryPath)
 
 let api = WABackup()
 let availableBackups = api.getLocalBackups()
@@ -124,16 +119,11 @@ if let chatId = chatId {
     let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
     if numberMessages > 1 {
         outputDirectoryPath = outputDirectoryPath + "/chat_\(chatId)"
-        do {
-            try FileManager.default.createDirectory(atPath: outputDirectoryPath, withIntermediateDirectories: true)
-        } catch {
-            print("Error: Failed to create output directory \(outputDirectory): \(error)")
-            exit(1)
-        }
+        createDirectory(path: outputDirectoryPath)
         let outputUrl = URL(fileURLWithPath: outputDirectoryPath)
         let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: outputUrl, from: backupToUse)
         let outputFilename = "chat_\(chatId).json"
-        outputMessagesJSON(messages: messages, to: outputFilename)
+        outputJSON(data: messages, to: outputFilename)
     } else {
         print ("No messages available")
         exit(1)
@@ -142,7 +132,7 @@ if let chatId = chatId {
     // Extract chats.json
     if chats.count > 1 {
         let outputFilename = "chats.json"
-        outputChatsJSON(chats: chats, to: outputFilename)
+        outputJSON(data: chats, to: outputFilename)
         // Extract all chats messages
 /*        if allChats {
             for chat in chats {
@@ -164,7 +154,7 @@ if let chatId = chatId {
 }
 
 
-func outputMessagesJSON(messages: [MessageInfo], to outputFilename: String) {
+func outputJSON<T: Encodable>(data: [T], to outputFilename: String) {
     let jsonEncoder = JSONEncoder()
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -172,44 +162,28 @@ func outputMessagesJSON(messages: [MessageInfo], to outputFilename: String) {
     jsonEncoder.outputFormatting = .prettyPrinted // Optional: if you want the JSON output to be indented
 
     do {
-        let jsonData = try jsonEncoder.encode(messages)
+        let jsonData = try jsonEncoder.encode(data)
         if let jsonString = String(data: jsonData, encoding: .utf8) {
             do {
                 let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
                 try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
-                print(">>> \(messages.count) messages saved to file \(outputUrl.path)")
+                print(">>> \(data.count) items saved to file \(outputUrl.path)")
             } catch {
-                print("Failed to save messages: \(error)")
+                print("Failed to save data: \(error)")
             }
         } else {
             print("Failed to convert JSON data to string")
         }
     } catch {
-        print("Failed to encode chats to JSON: \(error)")
+        print("Failed to encode data to JSON: \(error)")
     }
 }
 
-func outputChatsJSON(chats: [ChatInfo], to outputFilename: String) {
-    let jsonEncoder = JSONEncoder()
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-    jsonEncoder.dateEncodingStrategy = .formatted(formatter)
-    jsonEncoder.outputFormatting = .prettyPrinted // Optional: if you want the JSON output to be indented
-
+func createDirectory(path: String) {
     do {
-        let jsonData = try jsonEncoder.encode(chats)
-        if let jsonString = String(data: jsonData, encoding: .utf8) {
-            do {
-                let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
-                try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
-                print(">>> Info about \(chats.count) chats saved to file \(outputUrl.path)")
-            } catch {
-                print("Failed to save chats info: \(error)")
-            }
-        } else {
-            print("Failed to convert JSON data to string")
-        }
+        try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
     } catch {
-        print("Failed to encode chats to JSON: \(error)")
+        print("Error: Failed to create output directory \(path): \(error)")
+        exit(1)
     }
 }
