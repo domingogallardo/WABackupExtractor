@@ -17,7 +17,7 @@ func printUsage() {
     print("Usage: WABackupViewer  [-b <backup_id>] [-c <chat_id>] [-o <output_directory>]")
 }
 
-var outputDirectory = "WABackup" // Default output directory
+var outputDirectory: String = "WABackup" // Default output directory
 var backupId: String? = nil // Variable to hold backup ID
 var chatId: Int? = nil // Variable to hold chat ID
 var allChats = false // Variable to hold whether to output all chats or just one
@@ -75,8 +75,8 @@ if outputDirectory.hasPrefix("/") {
 
 createDirectory(path: outputDirectoryPath)
 
-let api = WABackup()
-let availableBackups = api.getLocalBackups()
+let api: WABackup = WABackup()
+let availableBackups: [IPhoneBackup] = api.getLocalBackups()
 
 let backupToUse: IPhoneBackup
 if availableBackups.count > 1 {
@@ -113,17 +113,18 @@ guard api.connectChatStorageDb(from: backupToUse) else {
     exit(1)
 }
 
-let chats = api.getChats(from: backupToUse)
+let chats: [ChatInfo] = api.getChats(from: backupToUse)
 
 if let chatId = chatId {
     let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
     if numberMessages > 1 {
         outputDirectoryPath = outputDirectoryPath + "/chat_\(chatId)"
         createDirectory(path: outputDirectoryPath)
-        let outputUrl = URL(fileURLWithPath: outputDirectoryPath)
-        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: outputUrl, from: backupToUse)
+        let directoryUrl = URL(fileURLWithPath: outputDirectoryPath)
+        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: directoryUrl, from: backupToUse)
         let outputFilename = "chat_\(chatId).json"
-        outputJSON(data: messages, to: outputFilename)
+        let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
+        outputJSON(data: messages, to: outputUrl)
     } else {
         print ("No messages available")
         exit(1)
@@ -132,21 +133,24 @@ if let chatId = chatId {
     // Extract chats.json
     if chats.count > 1 {
         let outputFilename = "chats.json"
-        outputJSON(data: chats, to: outputFilename)
-        // Extract all chats messages
-/*        if allChats {
+        let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
+        outputJSON(data: chats, to: outputUrl)
+        if allChats {
             for chat in chats {
-                let messages = api.getChatMessages(chatId: chat.id, from: backupToUse)
-                if messages.count > 1 {
+                let numberMessages = chat.numberMessages
+                if numberMessages > 0 {
+                    let chatDirectoryPath = outputDirectoryPath + "/chat_\(chat.id)"
+                    createDirectory(path: chatDirectoryPath)
+                    let directoryUrl = URL(fileURLWithPath: chatDirectoryPath)
+                    let messages = api.getChatMessages(chatId: chat.id, directoryToSaveMedia: directoryUrl, from: backupToUse)
                     let outputFilename = "chat_\(chat.id).json"
-                    outputMessagesJSON(messages: messages, to: outputFilename)
+                    let outputUrl = directoryUrl.appendingPathComponent(outputFilename)
+                    outputJSON(data: messages, to: outputUrl)
                 } else {
-                    print ("No messages available")
-                    exit(1)
+                    print("No messages in chat \(chat.id)")
                 }
             }
         }
-*/
     } else {
         print ("No chats available")
         exit(1)
@@ -154,7 +158,7 @@ if let chatId = chatId {
 }
 
 
-func outputJSON<T: Encodable>(data: [T], to outputFilename: String) {
+func outputJSON<T: Encodable>(data: [T], to outputUrl: URL) {
     let jsonEncoder = JSONEncoder()
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -165,7 +169,6 @@ func outputJSON<T: Encodable>(data: [T], to outputFilename: String) {
         let jsonData = try jsonEncoder.encode(data)
         if let jsonString = String(data: jsonData, encoding: .utf8) {
             do {
-                let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
                 try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
                 print(">>> \(data.count) items saved to file \(outputUrl.path)")
             } catch {
