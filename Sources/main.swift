@@ -66,7 +66,7 @@ while i < CommandLine.arguments.count {
     i += 1
 }
 
-let outputDirectoryPath: String
+var outputDirectoryPath: String
 if outputDirectory.hasPrefix("/") {
     outputDirectoryPath = outputDirectory
 } else {
@@ -118,9 +118,20 @@ guard api.connectChatStorageDb(from: backupToUse) else {
     exit(1)
 }
 
+let chats = api.getChats(from: backupToUse)
+
 if let chatId = chatId {
-    let messages = api.getChatMessages(chatId: chatId, from: backupToUse)
-    if messages.count > 1 {
+    let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
+    if numberMessages > 1 {
+        outputDirectoryPath = outputDirectoryPath + "/chat_\(chatId)"
+        do {
+            try FileManager.default.createDirectory(atPath: outputDirectoryPath, withIntermediateDirectories: true)
+        } catch {
+            print("Error: Failed to create output directory \(outputDirectory): \(error)")
+            exit(1)
+        }
+        let outputUrl = URL(fileURLWithPath: outputDirectoryPath)
+        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: outputUrl, from: backupToUse)
         let outputFilename = "chat_\(chatId).json"
         outputMessagesJSON(messages: messages, to: outputFilename)
     } else {
@@ -128,11 +139,12 @@ if let chatId = chatId {
         exit(1)
     }
 } else {
-    let chats = api.getChats(from: backupToUse)
+    // Extract chats.json
     if chats.count > 1 {
         let outputFilename = "chats.json"
         outputChatsJSON(chats: chats, to: outputFilename)
-        if allChats {
+        // Extract all chats messages
+/*        if allChats {
             for chat in chats {
                 let messages = api.getChatMessages(chatId: chat.id, from: backupToUse)
                 if messages.count > 1 {
@@ -144,11 +156,13 @@ if let chatId = chatId {
                 }
             }
         }
+*/
     } else {
         print ("No chats available")
         exit(1)
     }    
 }
+
 
 func outputMessagesJSON(messages: [MessageInfo], to outputFilename: String) {
     let jsonEncoder = JSONEncoder()
