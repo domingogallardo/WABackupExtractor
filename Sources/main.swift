@@ -12,99 +12,22 @@
 import Foundation
 import SwiftWABackupAPI
 
-
-func printUsage() {
-    print("Usage: WABackupViewer  [-b <backup_id>] [-c <chat_id>] [-o <output_directory>]")
+struct UserOptions {
+    var outputDirectory: String? 
+    var backupId: String? // Variable to hold backup ID
+    var chatId: Int? // Variable to hold chat ID
+    var allChats = false // Variable to hold whether to output all chats or just one
 }
 
-var outputDirectory: String = "WABackup" // Default output directory
-var backupId: String? = nil // Variable to hold backup ID
-var chatId: Int? = nil // Variable to hold chat ID
-var allChats = false // Variable to hold whether to output all chats or just one
-
-// Parse command line arguments
-var i = 0
-while i < CommandLine.arguments.count {
-    switch CommandLine.arguments[i] {
-    case "-o":
-        if i + 1 < CommandLine.arguments.count {
-            outputDirectory = CommandLine.arguments[i + 1]
-            i += 1
-        } else {
-            print("Error: -o flag requires a subsequent directory name argument")
-            printUsage()
-            exit(1)
-        }
-    case "-b":
-        if i + 1 < CommandLine.arguments.count {
-            backupId = CommandLine.arguments[i + 1]
-            i += 1
-        } else {
-            print("Error: -b flag requires a subsequent backup ID argument")
-            printUsage()
-            exit(1)
-        }
-    case "-c":
-        if i + 1 < CommandLine.arguments.count {
-            chatId = Int(CommandLine.arguments[i + 1])
-            i += 1
-        } else {
-            print("Error: -c flag requires a subsequent chat ID argument")
-            printUsage()
-            exit(1)
-        }
-    case "-all":
-        allChats = true
-        chatId = nil
-    default:
-        if i != 0 { // Ignore the program name itself
-            print("Error: Unexpected argument \(CommandLine.arguments[i])")
-            printUsage()
-            exit(1)
-        }
-    }
-    i += 1
-}
-
-var outputDirectoryPath: String
-if outputDirectory.hasPrefix("/") {
-    outputDirectoryPath = outputDirectory
-} else {
-    outputDirectoryPath = FileManager.default.currentDirectoryPath + "/" + outputDirectory
-}
-
+let userOptions: UserOptions = parseCommandLineArguments()
+let outputDirectoryPath = getOutputDirectoryPath(userOptions: userOptions)
 createDirectory(path: outputDirectoryPath)
-
 let api: WABackup = WABackup()
+
 let availableBackups: [IPhoneBackup] = api.getLocalBackups()
 
-let backupToUse: IPhoneBackup
-if availableBackups.count > 1 {
-    print("Found backups:")
-    for backup in availableBackups {
-        print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
-    }
-    if let backupId = backupId, let backup = availableBackups.first(where: { $0.identifier == backupId }) {
-        backupToUse = backup
-        print("Using backup with ID \(backupId)")
-        printUsage()
-    } else if let mostRecentBackup = availableBackups.sorted(by: { $0.creationDate > $1.creationDate }).first {
-        backupToUse = mostRecentBackup
-        print("Using most recent backup with ID \(mostRecentBackup.identifier)")
-        printUsage()
-
-    } else {
-        print("No backups available")
-        printUsage()
-        exit(1)
-    }
-} else if let onlyBackup = availableBackups.first {
-    backupToUse = onlyBackup
-    print("Using the only available backup with ID \(onlyBackup.identifier)")
-    printUsage()
-} else {
-    print("No backups available")
-    printUsage()
+guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
+    print("No backup selected")
     exit(1)
 }
 
@@ -115,40 +38,14 @@ guard api.connectChatStorageDb(from: backupToUse) else {
 
 let chats: [ChatInfo] = api.getChats(from: backupToUse)
 
-if let chatId = chatId {
-    let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
-    if numberMessages > 1 {
-        outputDirectoryPath = outputDirectoryPath + "/chat_\(chatId)"
-        createDirectory(path: outputDirectoryPath)
-        let directoryUrl = URL(fileURLWithPath: outputDirectoryPath)
-        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: directoryUrl, from: backupToUse)
-        let outputFilename = "chat_\(chatId).json"
-        let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
-        outputJSON(data: messages, to: outputUrl)
-    } else {
-        print ("No messages available")
-        exit(1)
-    }
+if let chatId = userOptions.chatId {
+    extractChatMessages(for: chatId, with: outputDirectoryPath, from: backupToUse)
 } else {
-    // Extract chats.json
     if chats.count > 1 {
-        let outputFilename = "chats.json"
-        let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
-        outputJSON(data: chats, to: outputUrl)
-        if allChats {
+        extractChatsInfo(chats: chats, to: outputDirectoryPath)
+        if userOptions.allChats {
             for chat in chats {
-                let numberMessages = chat.numberMessages
-                if numberMessages > 0 {
-                    let chatDirectoryPath = outputDirectoryPath + "/chat_\(chat.id)"
-                    createDirectory(path: chatDirectoryPath)
-                    let directoryUrl = URL(fileURLWithPath: chatDirectoryPath)
-                    let messages = api.getChatMessages(chatId: chat.id, directoryToSaveMedia: directoryUrl, from: backupToUse)
-                    let outputFilename = "chat_\(chat.id).json"
-                    let outputUrl = directoryUrl.appendingPathComponent(outputFilename)
-                    outputJSON(data: messages, to: outputUrl)
-                } else {
-                    print("No messages in chat \(chat.id)")
-                }
+                extractChatMessages(for: chat.id, with: outputDirectoryPath, from: backupToUse)
             }
         }
     } else {
@@ -157,6 +54,111 @@ if let chatId = chatId {
     }    
 }
 
+
+func printUsage() {
+    print("Usage: WABackupViewer  [-b <backup_id>] [-c <chat_id>] [-o <output_directory>]")
+}
+
+func getFlagArgument(currentIndex: Int, flag: String) -> String? {
+    if currentIndex + 1 < CommandLine.arguments.count {
+        return CommandLine.arguments[currentIndex + 1]
+    } else {
+        print("Error: \(flag) flag requires a subsequent argument")
+        printUsage()
+        exit(1)
+    }
+}
+
+func parseCommandLineArguments() -> UserOptions {
+    var i = 0
+    var userOptions = UserOptions()
+    while i < CommandLine.arguments.count {
+        switch CommandLine.arguments[i] {
+        case "-o":
+            userOptions.outputDirectory = getFlagArgument(currentIndex: i, flag: "-o") ?? userOptions.outputDirectory
+            i += 1
+        case "-b":
+            userOptions.backupId = getFlagArgument(currentIndex: i, flag: "-b")
+            i += 1
+        case "-c":
+            if let chatIdStr = getFlagArgument(currentIndex: i, flag: "-c") {
+                guard let chatId = Int(chatIdStr) else {
+                    print("Error: Invalid chat ID \(chatIdStr)")
+                    printUsage()
+                    exit(1)
+                }
+                userOptions.chatId = chatId
+                i += 1
+            }
+        case "-all":
+            userOptions.allChats = true
+            userOptions.chatId = nil
+        default:
+            if i != 0 { // Ignore the program name itself
+                print("Error: Unexpected argument \(CommandLine.arguments[i])")
+                printUsage()
+                exit(1)
+            }
+        }
+        i += 1
+    }
+    return userOptions
+}
+
+func getOutputDirectoryPath(userOptions: UserOptions) -> String {
+    let defaultOutputDirectory = "WABackup"
+    let outputDirectory = userOptions.outputDirectory ?? defaultOutputDirectory
+    var outputDirectoryPath: String
+    if outputDirectory.hasPrefix("/") {
+        outputDirectoryPath = outputDirectory
+    } else {
+        outputDirectoryPath = FileManager.default.currentDirectoryPath + "/" + outputDirectory
+    }
+    return outputDirectoryPath
+}
+
+func selectBackup(availableBackups: [IPhoneBackup]) -> IPhoneBackup? {
+    if availableBackups.count > 1 {
+        print("Found backups:")
+        for backup in availableBackups {
+            print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
+        }
+        print("Enter the ID of the backup to use:")
+        if let backupId = readLine() {
+            return availableBackups.first(where: { $0.identifier == backupId })
+        } else {
+            print("No backup ID entered")
+            return nil
+        }
+    } else if let onlyBackup = availableBackups.first {
+        print("Using the only available backup with ID \(onlyBackup.identifier)")
+        return onlyBackup
+    } else {
+        print("No backups available")
+        return nil
+    }
+}
+
+func extractChatsInfo(chats: [ChatInfo], to outputDirectoryPath: String) {
+    let outputFilename = "chats.json"
+    let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
+    outputJSON(data: chats, to: outputUrl)
+}
+
+func extractChatMessages(for chatId: Int, with directoryPath: String, from backupToUse: IPhoneBackup) {
+    let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
+    if numberMessages > 0 {
+        let chatDirectoryPath = directoryPath + "/chat_\(chatId)"
+        createDirectory(path: chatDirectoryPath)
+        let directoryUrl = URL(fileURLWithPath: chatDirectoryPath)
+        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: directoryUrl, from: backupToUse)
+        let outputFilename = "chat_\(chatId).json"
+        let outputUrl = directoryUrl.appendingPathComponent(outputFilename)
+        outputJSON(data: messages, to: outputUrl)
+    } else {
+        print("No messages in chat \(chatId)")
+    }
+}
 
 func outputJSON<T: Encodable>(data: [T], to outputUrl: URL) {
     let jsonEncoder = JSONEncoder()
