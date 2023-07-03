@@ -33,7 +33,7 @@ Once installed, you'll be able to run the Swift compiler from the terminal.
 
 Also, ensure you've granted the application permission to access the iPhone backup files.
 You can do this by going to `System Preferences -> Security & Privacy -> Full Disk Access`
-and adding the Terminal application.
+and adding the `Terminal` application.
 
 
 ## Installation
