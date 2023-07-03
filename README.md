@@ -8,6 +8,17 @@ also developed and maintain.
 The application can access iPhone backups located in 
 `~/Library/Application Support/MobileSync/Backup/` and extract both chat messages and chat metadata.
 
+## ⛔️Privacy Warning⛔️
+
+This tool is designed to access WhatsApp backup data for legitimate purposes such as data backup and 
+recovery or data analysis. It is crucial to remember that accessing, extracting, or analyzing chat data 
+without the explicit consent of all involved parties can violate privacy laws and regulations, as well 
+as WhatsApp's terms of service. 
+
+Any use of this tool should respect privacy laws and regulations, as well as WhatsApp's terms of service. 
+
+Always respect the privacy and rights of others.☮️
+
 ## Prerequisites
 
 The Swift language toolkit must be installed on your Mac. You can install it by installing 
@@ -89,17 +100,6 @@ WABackupViewer -b abcd1234 -c 226
 Since no output directory is specified in this command, the application will create 
 the default `WABackup` directory. Inside this directory, it will create a `chat_226` folder containing 
 the `chat_226.json` file and all media files associated with this chat.
-
-## ⛔️Privacy Warning⛔️
-
-This tool is designed to access WhatsApp backup data for legitimate purposes such as data backup and 
-recovery or data analysis. It is crucial to remember that accessing, extracting, or analyzing chat data 
-without the explicit consent of all involved parties can violate privacy laws and regulations, as well 
-as WhatsApp's terms of service. 
-
-Any use of this tool should respect privacy laws and regulations, as well as WhatsApp's terms of service. 
-
-Always respect the privacy and rights of others. ☮️
 
 ## Support
 
