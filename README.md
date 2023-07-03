@@ -44,50 +44,51 @@ sudo cp .build/release/WABackupViewer /usr/local/bin/WABackupViewer
 ## Usage
 
 To use the application, first create an _unencrypted_ backup of your iPhone on 
-your Mac. Simply connect the iPhone to the Mac, select it in the Finder and make a backup.
+your Mac. This can be done by connecting your iPhone to the Mac, selecting it in the 
+Finder, and making a backup.
 
-After the application is installed, you can use it as follows:
+After installing the application, you can use it as follows:
 
 ```bash
 WABackupViewer [-b <backup_id>] [-c <chat_id>] [-o <output_directory>] [-all]
 ```
 
-By default, the application will create a `WABackup` directory and save the file `chats.json`, 
-containing all the chat info from the most recent WhatsApp backup, within it. The application 
-will also print all backup identifiers, and you can select a different backup 
-using the `-b <backup_id>` flag.
+By default, the application creates a `WABackup` directory, where it saves a 
+`chats.json` file containing all chat information from the most recent WhatsApp backup. 
+The application prints all backup identifiers, allowing you to select a different 
+backup using the `-b <backup_id>` flag.
 
 Within the `chats.json` file, you will find all the chat IDs. You can extract all the messages 
-from a specific chat using the `-c <chat_id>` flag. The file `chat_<id>.json` will 
-then be saved in the output directory.
+from a specific chat using the `-c <chat_id>` flag. This will create a `chat_<id>` folder, 
+where a `chat_<id>.json` file will be saved, along with all the associated media files.
 
 The output directory can be customized using the `-o <output_directory>` flag. It 
-can either be an absolute path, starting with a slash, or a relative path to the current directory.
+can either be an absolute path (starting with a slash) or a relative path to the current directory.
 
 The flag `-all` saves all the chats.
 
 ## Example Usage
 
 For instance, if you want to extract all chat info from the most recent backup and save them 
-to a directory called `mychats`, you would run:
+to a directory called `mychats`, you can run:
 
 ```bash
 WABackupViewer -o mychats
 ```
 
-The `mychats/chats.json` file will be created. You can then view this file to identify 
-the chat for which you want to extract messages.
+This command will create a `mychats/chats.json` file.  By viewing this file, 
+you can identify the chat whose messages you wish to extract.
 
-As another example, to extract all messages from chat with ID `226` from a specific 
-backup with ID `abcd1234`, you would run:
+For example, to extract all messages from the chat with ID  `226` from a specific 
+backup with ID `abcd1234`, you can run:
 
 ```bash
 WABackupViewer -b abcd1234 -c 226
 ```
 
-As no output directory is specified, the default `WABackup` directory will be created, 
-and the messages will be stored as a JSON file `WABackup/chat_226.json`.
-
+Since no output directory is specified in this command, the application will create 
+the default `WABackup` directory. Inside this directory, it will create a `chat_226` folder containing 
+the `chat_226.json` file and all media files associated with this chat.
 
 ## Support
 
