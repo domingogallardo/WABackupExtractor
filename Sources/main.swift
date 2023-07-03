@@ -14,10 +14,12 @@ import SwiftWABackupAPI
 
 struct UserOptions {
     var outputDirectory: String? 
-    var backupId: String? // Variable to hold backup ID
-    var chatId: Int? // Variable to hold chat ID
-    var allChats = false // Variable to hold whether to output all chats or just one
+    var backupId: String? 
+    var chatId: Int? 
+    var allChats = false 
 }
+
+// Main application
 
 let userOptions: UserOptions = parseCommandLineArguments()
 let outputDirectoryPath = getOutputDirectoryPath(userOptions: userOptions)
@@ -54,6 +56,7 @@ if let chatId = userOptions.chatId {
     }    
 }
 
+// Auxiliary functions
 
 func printUsage() {
     print("Usage: WABackupViewer  [-b <backup_id>] [-c <chat_id>] [-o <output_directory>]")
@@ -115,6 +118,15 @@ func getOutputDirectoryPath(userOptions: UserOptions) -> String {
         outputDirectoryPath = FileManager.default.currentDirectoryPath + "/" + outputDirectory
     }
     return outputDirectoryPath
+}
+
+func createDirectory(path: String) {
+    do {
+        try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+    } catch {
+        print("Error: Failed to create output directory \(path): \(error)")
+        exit(1)
+    }
 }
 
 func selectBackup(availableBackups: [IPhoneBackup]) -> IPhoneBackup? {
@@ -181,14 +193,5 @@ func outputJSON<T: Encodable>(data: [T], to outputUrl: URL) {
         }
     } catch {
         print("Failed to encode data to JSON: \(error)")
-    }
-}
-
-func createDirectory(path: String) {
-    do {
-        try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
-    } catch {
-        print("Error: Failed to create output directory \(path): \(error)")
-        exit(1)
     }
 }
