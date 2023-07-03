@@ -90,10 +90,18 @@ Since no output directory is specified in this command, the application will cre
 the default `WABackup` directory. Inside this directory, it will create a `chat_226` folder containing 
 the `chat_226.json` file and all media files associated with this chat.
 
-## Support
+## ⛔️Privacy Warning⛔️
 
-**Please note that both the application and the underlying library are in the early stages 
-of development.** 🚧⚙️👩‍💻👨‍💻
+This tool is designed to access WhatsApp backup data for legitimate purposes such as data backup and 
+recovery or data analysis. It is crucial to remember that accessing, extracting, or analyzing chat data 
+without the explicit consent of all involved parties can violate privacy laws and regulations, as well 
+as WhatsApp's terms of service. 
+
+Any use of this tool should respect privacy laws and regulations, as well as WhatsApp's terms of service. 
+
+Always respect the privacy and rights of others. ☮️
+
+## Support
 
 Comments and suggestions are welcome. Feel free to add them in the [_Discussions_](https://github.com/domingogallardo/WABackupViewer/discussions) section.
 
