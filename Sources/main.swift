@@ -19,12 +19,26 @@ struct UserOptions {
     var allChats = false 
 }
 
+class WABackupHandler: WABackupDelegate {
+    var directoryToSaveMedia: String?
+
+    func didWriteMediaFile(fileName: String) {
+        if let directoryToSaveMedia = directoryToSaveMedia {
+            print(">>> Media file written: \(directoryToSaveMedia)/\(fileName)")
+        } else {
+            print(">>> Media file written: \(fileName)")
+        }
+    }
+}
+
 // Main application
 
 let userOptions: UserOptions = parseCommandLineArguments()
 let outputDirectoryPath = getOutputDirectoryPath(userOptions: userOptions)
 createDirectory(path: outputDirectoryPath)
 let api: WABackup = WABackup()
+let handler = WABackupHandler()
+api.delegate = handler
 
 let availableBackups: [IPhoneBackup] = api.getLocalBackups()
 
@@ -163,6 +177,7 @@ func extractChatMessages(for chatId: Int, with directoryPath: String, from backu
         let chatDirectoryPath = directoryPath + "/chat_\(chatId)"
         createDirectory(path: chatDirectoryPath)
         let directoryUrl = URL(fileURLWithPath: chatDirectoryPath)
+        handler.directoryToSaveMedia = chatDirectoryPath
         let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: directoryUrl, from: backupToUse)
         let outputFilename = "chat_\(chatId).json"
         let outputUrl = directoryUrl.appendingPathComponent(outputFilename)
