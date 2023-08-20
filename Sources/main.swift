@@ -23,11 +23,13 @@ class WABackupHandler: WABackupDelegate {
     var directoryToSaveMedia: String?
 
     func didWriteMediaFile(fileName: String) {
+        /*
         if let directoryToSaveMedia = directoryToSaveMedia {
             print(">>> Media file written: \(directoryToSaveMedia)/\(fileName)")
         } else {
             print(">>> Media file written: \(fileName)")
         }
+        */
     }
 }
 
@@ -36,6 +38,9 @@ class WABackupHandler: WABackupDelegate {
 let userOptions: UserOptions = parseCommandLineArguments()
 let outputDirectoryPath = getOutputDirectoryPath(userOptions: userOptions)
 createDirectory(path: outputDirectoryPath)
+let outputProfileDirectoryURL = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent("profiles")
+createDirectory(path: outputProfileDirectoryURL.path)
+
 let api: WABackup = WABackup()
 let handler = WABackupHandler()
 api.delegate = handler
@@ -53,15 +58,18 @@ guard api.connectChatStorageDb(from: backupToUse) else {
 }
 
 let chats: [ChatInfo] = api.getChats(from: backupToUse)
+let profiles: [ProfileInfo] = api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
+                                              from: backupToUse)
 
 if let chatId = userOptions.chatId {
-    extractChatMessages(for: chatId, with: outputDirectoryPath, from: backupToUse)
+    saveChatMessages(for: chatId, with: outputDirectoryPath, from: backupToUse)
 } else {
-    if chats.count > 1 {
-        extractChatsInfo(chats: chats, to: outputDirectoryPath)
+    if chats.count > 0 {
+        saveChatsInfo(chats: chats, to: outputDirectoryPath)
+        saveProfilesInfo(profiles: profiles, to: outputDirectoryPath)
         if userOptions.allChats {
             for chat in chats {
-                extractChatMessages(for: chat.id, with: outputDirectoryPath, from: backupToUse)
+                saveChatMessages(for: chat.id, with: outputDirectoryPath, from: backupToUse)
             }
         }
     } else {
@@ -165,13 +173,19 @@ func selectBackup(availableBackups: [IPhoneBackup]) -> IPhoneBackup? {
     }
 }
 
-func extractChatsInfo(chats: [ChatInfo], to outputDirectoryPath: String) {
+func saveChatsInfo(chats: [ChatInfo], to outputDirectoryPath: String) {
     let outputFilename = "chats.json"
     let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
     outputJSON(data: chats, to: outputUrl)
 }
 
-func extractChatMessages(for chatId: Int, with directoryPath: String, from backupToUse: IPhoneBackup) {
+func saveProfilesInfo(profiles: [ProfileInfo], to outputDirectoryPath: String) {
+    let outputFilename = "profiles.json"
+    let outputUrl = outputProfileDirectoryURL.appendingPathComponent(outputFilename)
+    outputJSON(data: profiles, to: outputUrl)
+}
+
+func saveChatMessages(for chatId: Int, with directoryPath: String, from backupToUse: IPhoneBackup) {
     let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
     if numberMessages > 0 {
         let chatDirectoryPath = directoryPath + "/chat_\(chatId)"
