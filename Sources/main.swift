@@ -58,8 +58,11 @@ guard api.connectChatStorageDb(from: backupToUse) else {
 }
 
 let chats: [ChatInfo] = api.getChats(from: backupToUse)
-let profiles: [ProfileInfo] = api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
+var profiles: [ProfileInfo] = api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
                                               from: backupToUse)
+if let myProfile = api.getMyProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: backupToUse) {
+    profiles.append(myProfile)
+}
 
 if let chatId = userOptions.chatId {
     saveChatMessages(for: chatId, with: outputDirectoryPath, from: backupToUse)
