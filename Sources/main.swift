@@ -52,16 +52,16 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
     exit(1)
 }
 
-guard api.connectChatStorageDb(from: backupToUse) else {
+guard let waDatabase = api.connectChatStorageDb(from: backupToUse) else {
     print("Failed to connect to the most recent backup")
     exit(1)
 }
 
-let chats: [ChatInfo] = api.getChats(from: backupToUse)
+let chats: [ChatInfo] = api.getChats(from: waDatabase)
 var profiles: [ProfileInfo] = api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
-                                              from: backupToUse)
-if let myProfile = api.getMyProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: backupToUse) {
-    profiles.append(myProfile)
+                                              from: waDatabase)
+if let userProfile = api.getUserProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: waDatabase) {
+    profiles.append(userProfile)
 }
 
 if let chatId = userOptions.chatId {
@@ -195,7 +195,7 @@ func saveChatMessages(for chatId: Int, with directoryPath: String, from backupTo
         createDirectory(path: chatDirectoryPath)
         let directoryUrl = URL(fileURLWithPath: chatDirectoryPath)
         handler.directoryToSaveMedia = chatDirectoryPath
-        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: directoryUrl, from: backupToUse)
+        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: directoryUrl, from: waDatabase)
         let outputFilename = "chat_\(chatId).json"
         let outputUrl = directoryUrl.appendingPathComponent(outputFilename)
         outputJSON(data: messages, to: outputUrl)
