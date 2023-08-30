@@ -36,10 +36,10 @@ class WABackupHandler: WABackupDelegate {
 // Main application
 
 let userOptions: UserOptions = parseCommandLineArguments()
-let outputDirectoryPath = getOutputDirectoryPath(userOptions: userOptions)
-createDirectory(path: outputDirectoryPath)
-let outputProfileDirectoryURL = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent("profiles")
-createDirectory(path: outputProfileDirectoryURL.path)
+let outputDirectoryURL = getOutputDirectoryURL(userOptions: userOptions)
+createDirectory(url: outputDirectoryURL)
+let outputProfileDirectoryURL = outputDirectoryURL.appendingPathComponent("profiles", isDirectory: true)
+createDirectory(url: outputProfileDirectoryURL)
 
 let api: WABackup = WABackup()
 let handler = WABackupHandler()
@@ -65,14 +65,14 @@ if let userProfile = api.getUserProfile(directoryToSaveMedia: outputProfileDirec
 }
 
 if let chatId = userOptions.chatId {
-    saveChatMessages(for: chatId, with: outputDirectoryPath, from: backupToUse)
+    saveChatMessages(for: chatId, with: outputDirectoryURL, from: backupToUse)
 } else {
     if chats.count > 0 {
-        saveChatsInfo(chats: chats, to: outputDirectoryPath)
-        saveProfilesInfo(profiles: profiles, to: outputDirectoryPath)
+        saveChatsInfo(chats: chats, to: outputDirectoryURL)
+        saveProfilesInfo(profiles: profiles, to: outputDirectoryURL)
         if userOptions.allChats {
             for chat in chats {
-                saveChatMessages(for: chat.id, with: outputDirectoryPath, from: backupToUse)
+                saveChatMessages(for: chat.id, with: outputDirectoryURL, from: backupToUse)
             }
         }
     } else {
@@ -133,23 +133,24 @@ func parseCommandLineArguments() -> UserOptions {
     return userOptions
 }
 
-func getOutputDirectoryPath(userOptions: UserOptions) -> String {
+func getOutputDirectoryURL(userOptions: UserOptions) -> URL {
     let defaultOutputDirectory = "WABackup"
-    let outputDirectory = userOptions.outputDirectory ?? defaultOutputDirectory
-    var outputDirectoryPath: String
-    if outputDirectory.hasPrefix("/") {
-        outputDirectoryPath = outputDirectory
+    let outputDirectoryPath = userOptions.outputDirectory ?? defaultOutputDirectory
+    var outputDirectoryURL: URL
+    if outputDirectoryPath.hasPrefix("/") {
+        outputDirectoryURL = URL(fileURLWithPath: outputDirectoryPath)
     } else {
-        outputDirectoryPath = FileManager.default.currentDirectoryPath + "/" + outputDirectory
+        outputDirectoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent(outputDirectoryPath, isDirectory: true)
     }
-    return outputDirectoryPath
+    return outputDirectoryURL
 }
 
-func createDirectory(path: String) {
+func createDirectory(url: URL) {
     do {
-        try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     } catch {
-        print("Error: Failed to create output directory \(path): \(error)")
+        print("Error: Failed to create output directory \(url): \(error)")
         exit(1)
     }
 }
@@ -176,28 +177,27 @@ func selectBackup(availableBackups: [IPhoneBackup]) -> IPhoneBackup? {
     }
 }
 
-func saveChatsInfo(chats: [ChatInfo], to outputDirectoryPath: String) {
+func saveChatsInfo(chats: [ChatInfo], to outputDirectoryURL: URL) {
     let outputFilename = "chats.json"
-    let outputUrl = URL(fileURLWithPath: outputDirectoryPath).appendingPathComponent(outputFilename)
+    let outputUrl = outputDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
     outputJSON(data: chats, to: outputUrl)
 }
 
-func saveProfilesInfo(profiles: [ProfileInfo], to outputDirectoryPath: String) {
+func saveProfilesInfo(profiles: [ProfileInfo], to outputDirectoryURL: URL) {
     let outputFilename = "profiles.json"
-    let outputUrl = outputProfileDirectoryURL.appendingPathComponent(outputFilename)
+    let outputUrl = outputProfileDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
     outputJSON(data: profiles, to: outputUrl)
 }
 
-func saveChatMessages(for chatId: Int, with directoryPath: String, from backupToUse: IPhoneBackup) {
+func saveChatMessages(for chatId: Int, with directoryURL: URL, from backupToUse: IPhoneBackup) {
     let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
     if numberMessages > 0 {
-        let chatDirectoryPath = directoryPath + "/chat_\(chatId)"
-        createDirectory(path: chatDirectoryPath)
-        let directoryUrl = URL(fileURLWithPath: chatDirectoryPath)
-        handler.directoryToSaveMedia = chatDirectoryPath
-        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: directoryUrl, from: waDatabase)
+        let chatDirectoryURL = directoryURL.appendingPathComponent("chat_\(chatId)", isDirectory: true)
+        createDirectory(url: chatDirectoryURL)
+        handler.directoryToSaveMedia = chatDirectoryURL.path
+        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: chatDirectoryURL, from: waDatabase)
         let outputFilename = "chat_\(chatId).json"
-        let outputUrl = directoryUrl.appendingPathComponent(outputFilename)
+        let outputUrl = chatDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
         outputJSON(data: messages, to: outputUrl)
     } else {
         print("No messages in chat \(chatId)")
