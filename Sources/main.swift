@@ -45,7 +45,20 @@ let api: WABackup = WABackup()
 let handler = WABackupHandler()
 api.delegate = handler
 
-let availableBackups: [IPhoneBackup] = api.getLocalBackups()
+var availableBackups: [IPhoneBackup] = []
+
+do {
+    let fetchedBackups =  try api.getBackups()
+    availableBackups = fetchedBackups.validBackups
+    
+    // print URLs of invalid backups
+    for url in fetchedBackups.invalidBackups {
+        print("Invalid backup in: \(url.path)")
+}
+} catch {
+    print("Error: Failed to fetch backups: \(error)")
+    exit(1)
+}
 
 guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
     print("No backup selected")
