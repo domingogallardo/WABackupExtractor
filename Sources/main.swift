@@ -65,34 +65,44 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
     exit(1)
 }
 
-guard let waDatabase = api.connectChatStorageDb(from: backupToUse) else {
-    print("Failed to connect to the most recent backup")
+do {
+    let waDatabase = try api.connectChatStorageDb(from: backupToUse)
+    let chats: [ChatInfo] = api.getChats(from: waDatabase)
+    var profiles: [ProfileInfo] = api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
+                                                from: waDatabase)
+    if let userProfile = api.getUserProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: waDatabase) {
+        profiles.append(userProfile)
+    }
+
+    if let chatId = userOptions.chatId {
+        saveChatMessages(for: chatId, 
+                         with: outputDirectoryURL, 
+                         from: backupToUse,
+                         chats: chats,
+                         waDatabase: waDatabase)
+    } else {
+        if chats.count > 0 {
+            saveChatsInfo(chats: chats, to: outputDirectoryURL)
+            saveProfilesInfo(profiles: profiles, to: outputDirectoryURL)
+            if userOptions.allChats {
+                for chat in chats {
+                    saveChatMessages(for: chat.id, 
+                                     with: outputDirectoryURL, 
+                                     from: backupToUse, 
+                                     chats: chats, 
+                                     waDatabase: waDatabase)
+                }
+            }
+        } else {
+            print ("No chats available")
+            exit(1)
+        }    
+    }
+} catch {
+    print("Error: \(error)")
     exit(1)
 }
 
-let chats: [ChatInfo] = api.getChats(from: waDatabase)
-var profiles: [ProfileInfo] = api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
-                                              from: waDatabase)
-if let userProfile = api.getUserProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: waDatabase) {
-    profiles.append(userProfile)
-}
-
-if let chatId = userOptions.chatId {
-    saveChatMessages(for: chatId, with: outputDirectoryURL, from: backupToUse)
-} else {
-    if chats.count > 0 {
-        saveChatsInfo(chats: chats, to: outputDirectoryURL)
-        saveProfilesInfo(profiles: profiles, to: outputDirectoryURL)
-        if userOptions.allChats {
-            for chat in chats {
-                saveChatMessages(for: chat.id, with: outputDirectoryURL, from: backupToUse)
-            }
-        }
-    } else {
-        print ("No chats available")
-        exit(1)
-    }    
-}
 
 // Auxiliary functions
 
@@ -202,7 +212,11 @@ func saveProfilesInfo(profiles: [ProfileInfo], to outputDirectoryURL: URL) {
     outputJSON(data: profiles, to: outputUrl)
 }
 
-func saveChatMessages(for chatId: Int, with directoryURL: URL, from backupToUse: IPhoneBackup) {
+func saveChatMessages(for chatId: Int, 
+                      with directoryURL: URL, 
+                      from backupToUse: IPhoneBackup,
+                      chats: [ChatInfo],
+                      waDatabase: WADatabase) {
     let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
     if numberMessages > 0 {
         let chatDirectoryURL = directoryURL.appendingPathComponent("chat_\(chatId)", isDirectory: true)
