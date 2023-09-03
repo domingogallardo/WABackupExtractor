@@ -65,8 +65,11 @@ WABackupViewer [-b <backup_id>] [-c <chat_id>] [-o <output_directory>] [-all]
 ```
 
 By default, the application creates a `WABackup` directory, where it saves a 
-`chats.json` file containing all chat information from the most recent WhatsApp backup. 
-The application prints all backup identifiers, allowing you to select a different 
+`chats.json` containing all chat information from the most recent WhatsApp backup. 
+It also creates a `profiles` directory with the file `profiles.json` and all the
+thumbnails and profiles images.
+
+The application also prints all backup identifiers, allowing you to select a different
 backup using the `-b <backup_id>` flag.
 
 Within the `chats.json` file, you will find all the chat IDs. You can extract all the messages 
@@ -87,8 +90,9 @@ to a directory called `mychats`, you can run:
 WABackupViewer -o mychats
 ```
 
-This command will create a `mychats/chats.json` file.  By viewing this file, 
-you can identify the chat whose messages you wish to extract.
+This command will create a `mychats/chats.json` file and a `mychats/profiles` directory.  
+By viewing the file `chats.json` you can identify the chat whose messages you wish to extract. And
+in the `profiles` directory you will find the information about all the profiles.
 
 For example, to extract all messages from the chat with ID  `226` from a specific 
 backup with ID `abcd1234`, you can run:
