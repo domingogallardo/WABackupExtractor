@@ -56,21 +56,19 @@ do {
         print("Invalid backup in: \(url.path)")
 }
 } catch {
-    print("Error: Failed to fetch backups: \(error)")
-    exit(1)
+    fatalError("Error: Failed to fetch backups: \(error)")
 }
 
 guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
-    print("No backup selected")
-    exit(1)
+    fatalError("No backup selected")
 }
 
 do {
     let waDatabase = try api.connectChatStorageDb(from: backupToUse)
-    let chats: [ChatInfo] = api.getChats(from: waDatabase)
-    var profiles: [ProfileInfo] = api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
+    let chats: [ChatInfo] = try api.getChats(from: waDatabase)
+    var profiles: [ProfileInfo] = try api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
                                                 from: waDatabase)
-    if let userProfile = api.getUserProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: waDatabase) {
+    if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: waDatabase) {
         profiles.append(userProfile)
     }
 
@@ -94,13 +92,11 @@ do {
                 }
             }
         } else {
-            print ("No chats available")
-            exit(1)
+            fatalError ("No chats available")
         }    
     }
 } catch {
-    print("Error: \(error)")
-    exit(1)
+    fatalError("Error: \(error)")
 }
 
 
@@ -114,9 +110,8 @@ func getFlagArgument(currentIndex: Int, flag: String) -> String? {
     if currentIndex + 1 < CommandLine.arguments.count {
         return CommandLine.arguments[currentIndex + 1]
     } else {
-        print("Error: \(flag) flag requires a subsequent argument")
         printUsage()
-        exit(1)
+        fatalError("Error: \(flag) flag requires a subsequent argument")
     }
 }
 
@@ -134,9 +129,8 @@ func parseCommandLineArguments() -> UserOptions {
         case "-c":
             if let chatIdStr = getFlagArgument(currentIndex: i, flag: "-c") {
                 guard let chatId = Int(chatIdStr) else {
-                    print("Error: Invalid chat ID \(chatIdStr)")
                     printUsage()
-                    exit(1)
+                    fatalError("Error: Invalid chat ID \(chatIdStr)")
                 }
                 userOptions.chatId = chatId
                 i += 1
@@ -146,9 +140,8 @@ func parseCommandLineArguments() -> UserOptions {
             userOptions.chatId = nil
         default:
             if i != 0 { // Ignore the program name itself
-                print("Error: Unexpected argument \(CommandLine.arguments[i])")
                 printUsage()
-                exit(1)
+                fatalError("Error: Unexpected argument \(CommandLine.arguments[i])")
             }
         }
         i += 1
@@ -173,8 +166,7 @@ func createDirectory(url: URL) {
     do {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     } catch {
-        print("Error: Failed to create output directory \(url): \(error)")
-        exit(1)
+        fatalError("Error: Failed to create output directory \(url): \(error)")
     }
 }
 
@@ -222,7 +214,7 @@ func saveChatMessages(for chatId: Int,
         let chatDirectoryURL = directoryURL.appendingPathComponent("chat_\(chatId)", isDirectory: true)
         createDirectory(url: chatDirectoryURL)
         handler.directoryToSaveMedia = chatDirectoryURL.path
-        let messages = api.getChatMessages(chatId: chatId, directoryToSaveMedia: chatDirectoryURL, from: waDatabase)
+        let messages = try! api.getChatMessages(chatId: chatId, directoryToSaveMedia: chatDirectoryURL, from: waDatabase)
         let outputFilename = "chat_\(chatId).json"
         let outputUrl = chatDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
         outputJSON(data: messages, to: outputUrl)
