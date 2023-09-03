@@ -1,6 +1,6 @@
-# WABackupViewer
+# WABackupExtractor
 
-`WABackupViewer` is a macOS command-line application, written in Swift, which allows 
+`WABackupExtractor` is a macOS command-line application, written in Swift, which allows 
 you to backup and explore your WhatsApp chats. The application leverages the 
 [`SwiftWABackupAPI`](https://github.com/domingogallardo/SwiftWABackupAPI), which we 
 also developed and maintain.
@@ -41,15 +41,15 @@ and adding the `Terminal` application.
 To begin, clone the repository from GitHub:
 
 ```bash
-git clone https://github.com/domingogallardo/WABackupViewer.git
+git clone https://github.com/domingogallardo/WABackupExtractor.git
 ```
 
 Next, build and install the application using the Swift build system:
 
 ```bash
-cd WABackupViewer
+cd WABackupExtractor
 swift build -c release
-sudo cp .build/release/WABackupViewer /usr/local/bin/WABackupViewer
+sudo cp .build/release/WABackupExtractor /usr/local/bin/WABackupExtractor
 ```
 
 ## Usage
@@ -61,7 +61,7 @@ Finder, and making a backup.
 After installing the application, you can use it as follows:
 
 ```bash
-WABackupViewer [-b <backup_id>] [-c <chat_id>] [-o <output_directory>] [-all]
+WABackupExtractor [-b <backup_id>] [-c <chat_id>] [-o <output_directory>] [-all]
 ```
 
 By default, the application creates a `WABackup` directory, where it saves a 
@@ -87,7 +87,7 @@ For instance, if you want to extract all chat info from the most recent backup a
 to a directory called `mychats`, you can run:
 
 ```bash
-WABackupViewer -o mychats
+WABackupExtractor -o mychats
 ```
 
 This command will create a `mychats/chats.json` file and a `mychats/profiles` directory.  
@@ -98,7 +98,7 @@ For example, to extract all messages from the chat with ID  `226` from a specifi
 backup with ID `abcd1234`, you can run:
 
 ```bash
-WABackupViewer -b abcd1234 -c 226
+WABackupExtractor -b abcd1234 -c 226
 ```
 
 Since no output directory is specified in this command, the application will create 
@@ -107,6 +107,6 @@ the `chat_226.json` file and all media files associated with this chat.
 
 ## Support
 
-Comments and suggestions are welcome. Feel free to add them in the [_Discussions_](https://github.com/domingogallardo/WABackupViewer/discussions) section.
+Comments and suggestions are welcome. Feel free to add them in the [_Discussions_](https://github.com/domingogallardo/WABackupExtractor/discussions) section.
 
-Enjoy using WABackupViewer!🎉🚀💻
+Enjoy using WABackupExtractor!🎉🚀💻
