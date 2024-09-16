@@ -66,7 +66,7 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
 do {
     let waDatabase = try api.connectChatStorageDb(from: backupToUse)
     let chats: [ChatInfo] = try api.getChats(from: waDatabase)
-    var contacts: [ProfileInfo] = try api.getProfiles(directoryToSaveMedia: outputContactDirectoryURL, 
+    var contacts: [ContactInfo] = try api.getContacts(directoryToSaveMedia: outputContactDirectoryURL,
                                                 from: waDatabase)
     if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase) {
         contacts.append(userProfile)
@@ -198,7 +198,7 @@ func saveChatsInfo(chats: [ChatInfo], to outputDirectoryURL: URL) {
     outputJSON(data: chats, to: outputUrl)
 }
 
-func saveContactsInfo(contacts: [ProfileInfo], to outputDirectoryURL: URL) {
+func saveContactsInfo(contacts: [ContactInfo], to outputDirectoryURL: URL) {
     let outputFilename = "contacts.json"
     let outputUrl = outputContactDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
     outputJSON(data: contacts, to: outputUrl)
