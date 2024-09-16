@@ -38,8 +38,8 @@ class WABackupHandler: WABackupDelegate {
 let userOptions: UserOptions = parseCommandLineArguments()
 let outputDirectoryURL = getOutputDirectoryURL(userOptions: userOptions)
 createDirectory(url: outputDirectoryURL)
-let outputProfileDirectoryURL = outputDirectoryURL.appendingPathComponent("profiles", isDirectory: true)
-createDirectory(url: outputProfileDirectoryURL)
+let outputContactDirectoryURL = outputDirectoryURL.appendingPathComponent("contacts", isDirectory: true)
+createDirectory(url: outputContactDirectoryURL)
 
 let api: WABackup = WABackup()
 let handler = WABackupHandler()
@@ -66,10 +66,10 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
 do {
     let waDatabase = try api.connectChatStorageDb(from: backupToUse)
     let chats: [ChatInfo] = try api.getChats(from: waDatabase)
-    var profiles: [ProfileInfo] = try api.getProfiles(directoryToSaveMedia: outputProfileDirectoryURL, 
+    var contacts: [ProfileInfo] = try api.getProfiles(directoryToSaveMedia: outputContactDirectoryURL, 
                                                 from: waDatabase)
-    if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputProfileDirectoryURL, from: waDatabase) {
-        profiles.append(userProfile)
+    if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase) {
+        contacts.append(userProfile)
     }
 
     if let chatId = userOptions.chatId {
@@ -81,7 +81,7 @@ do {
     } else {
         if chats.count > 0 {
             saveChatsInfo(chats: chats, to: outputDirectoryURL)
-            saveProfilesInfo(profiles: profiles, to: outputDirectoryURL)
+            saveContactsInfo(contacts: contacts, to: outputDirectoryURL)
             if userOptions.allChats {
                 for chat in chats {
                     saveChatMessages(for: chat.id, 
@@ -198,10 +198,10 @@ func saveChatsInfo(chats: [ChatInfo], to outputDirectoryURL: URL) {
     outputJSON(data: chats, to: outputUrl)
 }
 
-func saveProfilesInfo(profiles: [ProfileInfo], to outputDirectoryURL: URL) {
-    let outputFilename = "profiles.json"
-    let outputUrl = outputProfileDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
-    outputJSON(data: profiles, to: outputUrl)
+func saveContactsInfo(contacts: [ProfileInfo], to outputDirectoryURL: URL) {
+    let outputFilename = "contacts.json"
+    let outputUrl = outputContactDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
+    outputJSON(data: contacts, to: outputUrl)
 }
 
 func saveChatMessages(for chatId: Int, 
