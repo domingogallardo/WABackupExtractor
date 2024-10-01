@@ -66,9 +66,8 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
 do {
     let waDatabase = try api.connectChatStorageDb(from: backupToUse)
     let chats: [ChatInfo] = try api.getChats(from: waDatabase)
-    var contacts: [ContactInfo] = try api.getContacts(directoryToSaveMedia: outputContactDirectoryURL,
-                                                from: waDatabase)
-    if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase) {
+    var contacts: [ContactInfo] = try api.getContacts(directoryToSaveMedia:                 outputContactDirectoryURL, from: waDatabase)
+     if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase) {
         contacts.append(userProfile)
     }
 
