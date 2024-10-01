@@ -7,8 +7,7 @@ let package = Package(
     name: "WABackupExtractor",
     dependencies: [
         .package(
-            url: "https://github.com/domingogallardo/SwiftWABackupAPI.git", 
-            from: "1.0.1"
+            path: "../SwiftWABackupAPI" // Ruta relativa al API en tu sistema local
         ),
     ],
     targets: [
