@@ -50,14 +50,14 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
 do {
     let waDatabase = try api.connectChatStorageDb(from: backupToUse)
     let chats: [ChatInfo] = try api.getChats(from: waDatabase)
-    var contacts: [ContactInfo] = try api.getContacts(directoryToSaveMedia:                 outputContactDirectoryURL, from: waDatabase)
-     if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase) {
+    var contacts: [ContactInfo] = try api.getContacts(chats: chats, directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase)
+    if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase) {
         contacts.append(userProfile)
     }
 
     if let chatId = userOptions.chatId {
-        saveChatMessages(for: chatId, 
-                         with: outputDirectoryURL, 
+        saveChatMessages(for: chatId,
+                         with: outputDirectoryURL,
                          from: backupToUse,
                          chats: chats,
                          waDatabase: waDatabase)
@@ -67,16 +67,16 @@ do {
             saveContactsInfo(contacts: contacts, to: outputDirectoryURL)
             if userOptions.allChats {
                 for chat in chats {
-                    saveChatMessages(for: chat.id, 
-                                     with: outputDirectoryURL, 
-                                     from: backupToUse, 
-                                     chats: chats, 
+                    saveChatMessages(for: chat.id,
+                                     with: outputDirectoryURL,
+                                     from: backupToUse,
+                                     chats: chats,
                                      waDatabase: waDatabase)
                 }
             }
         } else {
             fatalError ("No chats available")
-        }    
+        }
     }
 } catch {
     fatalError("Error: \(error)")
