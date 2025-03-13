@@ -21,31 +21,33 @@ struct UserOptions {
 
 // Main application
 
+// Initialize the API
+let api: WABackup = WABackup()
+
+// Fetch backups
+var availableBackups: [IPhoneBackup] = []
+do {
+    let fetchedBackups =  try api.getBackups()
+    availableBackups = fetchedBackups.validBackups
+    // Print invalid backups
+    for url in fetchedBackups.invalidBackups {
+        print("Invalid backup in: \(url.path)")
+    }
+} catch {
+    fatalError("Error: Failed to fetch backups: \(error)")
+}
+
+// Let the user select and confirm the backup
+guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
+    fatalError("No backup selected")
+}
+
+// Now parse command line options and set up output directories
 let userOptions: UserOptions = parseCommandLineArguments()
 let outputDirectoryURL = getOutputDirectoryURL(userOptions: userOptions)
 createDirectory(url: outputDirectoryURL)
 let outputContactDirectoryURL = outputDirectoryURL.appendingPathComponent("contacts", isDirectory: true)
 createDirectory(url: outputContactDirectoryURL)
-
-let api: WABackup = WABackup()
-
-var availableBackups: [IPhoneBackup] = []
-
-do {
-    let fetchedBackups =  try api.getBackups()
-    availableBackups = fetchedBackups.validBackups
-    
-    // print URLs of invalid backups
-    for url in fetchedBackups.invalidBackups {
-        print("Invalid backup in: \(url.path)")
-}
-} catch {
-    fatalError("Error: Failed to fetch backups: \(error)")
-}
-
-guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
-    fatalError("No backup selected")
-}
 
 do {
     let waDatabase = try api.connectChatStorageDb(from: backupToUse)
@@ -154,24 +156,29 @@ func createDirectory(url: URL) {
 }
 
 func selectBackup(availableBackups: [IPhoneBackup]) -> IPhoneBackup? {
-    if availableBackups.count > 1 {
-        print("Found backups:")
-        for backup in availableBackups {
-            print("    ID: \(backup.identifier) Date: \(backup.creationDate)")
-        }
-        print("Enter the ID of the backup to use:")
-        if let backupId = readLine() {
-            return availableBackups.first(where: { $0.identifier == backupId })
-        } else {
-            print("No backup ID entered")
-            return nil
-        }
-    } else if let onlyBackup = availableBackups.first {
-        print("Using the only available backup with ID \(onlyBackup.identifier)")
-        return onlyBackup
-    } else {
-        print("No backups available")
+    if availableBackups.isEmpty {
+        print("No hay backups disponibles.")
         return nil
+    }
+    
+    print("Se encontraron los siguientes backups:")
+    for (index, backup) in availableBackups.enumerated() {
+        print("\(index + 1)) ID: \(backup.identifier) - Fecha: \(backup.creationDate)")
+    }
+    
+    while true {
+        print("Introduce el número del backup que deseas usar:")
+        if let input = readLine(), let selectedIndex = Int(input), selectedIndex >= 1 && selectedIndex <= availableBackups.count {
+            let selectedBackup = availableBackups[selectedIndex - 1]
+            print("Has seleccionado el backup con ID \(selectedBackup.identifier) y fecha \(selectedBackup.creationDate). ¿Confirmas? (s/n)")
+            if let confirmation = readLine(), confirmation.lowercased() == "s" || confirmation.isEmpty {
+                return selectedBackup
+            } else {
+                print("Selección cancelada. Por favor, vuelve a seleccionar.")
+            }
+        } else {
+            print("Entrada inválida. Debes introducir un número entre 1 y \(availableBackups.count).")
+        }
     }
 }
 
@@ -183,7 +190,7 @@ func saveChatsInfo(chats: [ChatInfo], to outputDirectoryURL: URL) {
 
 func saveContactsInfo(contacts: [ContactInfo], to outputDirectoryURL: URL) {
     let outputFilename = "contacts.json"
-    let outputUrl = outputContactDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
+    let outputUrl = outputDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
     outputJSON(data: contacts, to: outputUrl)
 }
 
