@@ -61,7 +61,7 @@ Finder, and making a backup.
 After installing the application, you can use it as follows:
 
 ```bash
-WABackupExtractor [-b <backup_id>] [-c <chat_id>] [-o <output_directory>] [-all]
+WABackupExtractor [-c <chat_id>] [-o <output_directory>] [-all]
 ```
 
 By default, the application creates a `WABackup` directory, where it saves a 
@@ -69,8 +69,7 @@ By default, the application creates a `WABackup` directory, where it saves a
 It also creates a `profiles` directory with the file `profiles.json` and all the
 thumbnails and profiles images.
 
-The application also prints all backup identifiers, allowing you to select a different
-backup using the `-b <backup_id>` flag.
+Upon launching the application, if more than one backup is available, the user will be presented with a list of backups to choose from. If only one backup is available, it will be selected automatically.
 
 Within the `chats.json` file, you will find all the chat IDs. You can extract all the messages 
 from a specific chat using the `-c <chat_id>` flag. This will create a `chat_<id>` folder, 
@@ -94,11 +93,10 @@ This command will create a `mychats/chats.json` file and a `mychats/profiles` di
 By viewing the file `chats.json` you can identify the chat whose messages you wish to extract. And
 in the `profiles` directory you will find the information about all the profiles.
 
-For example, to extract all messages from the chat with ID  `226` from a specific 
-backup with ID `abcd1234`, you can run:
+To extract all messages from the chat with ID  `226`, you can run:
 
 ```bash
-WABackupExtractor -b abcd1234 -c 226
+WABackupExtractor -c 226
 ```
 
 Since no output directory is specified in this command, the application will create 
