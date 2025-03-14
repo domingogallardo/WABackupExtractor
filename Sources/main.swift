@@ -5,7 +5,7 @@
 //  Created by Domingo Gallardo on 24/05/23.
 //
 
-//  The aplication needs permission to access the iPhone backup in 
+//  The aplication needs permission to access the iPhone backup in
 //   ~/Library/Application Support/MobileSync/Backup/
 //  Go to System Preferences -> Security & Privacy -> Full Disk Access
 
@@ -13,10 +13,9 @@ import Foundation
 import SwiftWABackupAPI
 
 struct UserOptions {
-    var outputDirectory: String? 
-    var backupId: String? 
-    var chatId: Int? 
-    var allChats = false 
+    var outputDirectory: String?
+    var chatId: Int?
+    var allChats = false
 }
 
 // Main application
@@ -108,9 +107,6 @@ func parseCommandLineArguments() -> UserOptions {
         case "-o":
             userOptions.outputDirectory = getFlagArgument(currentIndex: i, flag: "-o") ?? userOptions.outputDirectory
             i += 1
-        case "-b":
-            userOptions.backupId = getFlagArgument(currentIndex: i, flag: "-b")
-            i += 1
         case "-c":
             if let chatIdStr = getFlagArgument(currentIndex: i, flag: "-c") {
                 guard let chatId = Int(chatIdStr) else {
@@ -155,10 +151,18 @@ func createDirectory(url: URL) {
     }
 }
 
+
 func selectBackup(availableBackups: [IPhoneBackup]) -> IPhoneBackup? {
     if availableBackups.isEmpty {
         print("No hay backups disponibles.")
         return nil
+    }
+    
+    // Si solo hay un backup, se selecciona automáticamente sin pedir confirmación
+    if availableBackups.count == 1 {
+        let onlyBackup = availableBackups.first!
+        print("Solo hay un backup disponible. Seleccionando automáticamente el backup con ID \(onlyBackup.identifier) y fecha \(onlyBackup.creationDate).")
+        return onlyBackup
     }
     
     print("Se encontraron los siguientes backups:")
@@ -194,8 +198,8 @@ func saveContactsInfo(contacts: [ContactInfo], to outputDirectoryURL: URL) {
     outputJSON(data: contacts, to: outputUrl)
 }
 
-func saveChatMessages(for chatId: Int, 
-                      with directoryURL: URL, 
+func saveChatMessages(for chatId: Int,
+                      with directoryURL: URL,
                       from backupToUse: IPhoneBackup,
                       chats: [ChatInfo],
                       waDatabase: WADatabase) {
