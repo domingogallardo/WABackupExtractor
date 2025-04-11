@@ -18,6 +18,11 @@ struct UserOptions {
     var allChats = false
 }
 
+struct ChatInfoExtended: Encodable {
+    let chat: ChatInfo
+    let contacts: [ContactInfo]
+}
+
 // Main application
 
 // Initialize the API
@@ -195,17 +200,58 @@ func saveChatMessages(for chatId: Int,
                       from backupToUse: IPhoneBackup,
                       chats: [ChatInfo],
                       waDatabase: WADatabase) {
-    let numberMessages = chats.filter { $0.id == chatId }.first?.numberMessages ?? 0
+    
+    let numberMessages = chats.first { $0.id == chatId }?.numberMessages ?? 0
     if numberMessages > 0 {
         let chatDirectoryURL = directoryURL.appendingPathComponent("chat_\(chatId)", isDirectory: true)
         createDirectory(url: chatDirectoryURL)
-        let (messages, contactsInChat) = try! api.getChatMessages(chatId: chatId, directoryToSaveMedia: chatDirectoryURL, from: waDatabase)
-        let outputFilename = "chat_\(chatId).json"
-        let outputUrl = chatDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
-        outputJSON(data: messages, to: outputUrl)
-        saveContactsInfo(contacts: contactsInChat, for: chatId, to: chatDirectoryURL)
+
+        // 📨 Obtener mensajes y contactos del chat
+        let (messages, contactsInChat) = try! api.getChatMessages(
+            chatId: chatId,
+            directoryToSaveMedia: chatDirectoryURL,
+            from: waDatabase
+        )
+
+        // 💬 Guardar mensajes
+        let messagesFilename = "chat_\(chatId)_messages.json"
+        let messagesUrl = chatDirectoryURL.appendingPathComponent(messagesFilename, isDirectory: false)
+        outputJSON(data: messages, to: messagesUrl)
+
+        // 👥 Guardar info y contactos del chat
+        if let chatInfo = chats.first(where: { $0.id == chatId }) {
+            let chatInfoExtended = ChatInfoExtended(chat: chatInfo, contacts: contactsInChat)
+            let chatInfoFilename = "chat_\(chatId)_info.json"
+            let chatInfoUrl = chatDirectoryURL.appendingPathComponent(chatInfoFilename, isDirectory: false)
+            outputJSON(data: chatInfoExtended, to: chatInfoUrl)
+        }
+
     } else {
         print("No messages in chat \(chatId)")
+    }
+}
+
+func outputJSON<T: Encodable>(data: T, to outputUrl: URL) {
+    let jsonEncoder = JSONEncoder()
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+    jsonEncoder.dateEncodingStrategy = .formatted(formatter)
+    jsonEncoder.outputFormatting = .prettyPrinted
+
+    do {
+        let jsonData = try jsonEncoder.encode(data)
+        if let jsonString = String(data: jsonData, encoding: .utf8) {
+            do {
+                try jsonString.write(toFile: outputUrl.path, atomically: true, encoding: .utf8)
+                print(">>> Saved file to \(outputUrl.path)")
+            } catch {
+                print("Failed to save data: \(error)")
+            }
+        } else {
+            print("Failed to convert JSON data to string")
+        }
+    } catch {
+        print("Failed to encode data to JSON: \(error)")
     }
 }
 
