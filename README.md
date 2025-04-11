@@ -69,10 +69,10 @@ By default, the application creates a `WABackup` directory, where it saves a
 
 Upon launching the application, if more than one backup is available, the user will be presented with a list of backups to choose from. If only one backup is available, it will be selected automatically.
 
-Within the `chats.json` file, you will find all the chat IDs. You can extract all the messages 
-from a specific chat using the `-c <chat_id>` flag. This will create a `chat_<id>` folder, 
-where a `chat_<id>.json` file will be saved, along with all the associated media files, and all the 
-info of the contacts of the chat (in the file `contacts_<id>.json`) and their profiles images.
+Within the chats.json file, you will find all the chat IDs. You can extract all messages from a 
+specific chat using the -c <chat_id> flag. This will create a chat_<id> folder containing a chat_<id>.json 
+file with the messages, all associated media files, the contact information for that chat 
+(in contacts_<id>.json), and their profile images.
 
 The output directory can be customized using the `-o <output_directory>` flag. It 
 can either be an absolute path (starting with a slash) or a relative path to the current directory.
@@ -97,10 +97,10 @@ To extract all messages and contacts from the chat with ID  `226`, you can run:
 WABackupExtractor -c 226
 ```
 
-Since no output directory is specified in this command, the application will create 
-the default `WABackup` directory. Inside this directory, it will create a `chat_226` folder containing 
-the `chat_226.json` and `contacts_226.json` files and all media files associated with this chat and the 
-contacts profile images.
+Since no output directory is specified in this command, the application will create the default 
+WABackup directory. Inside this directory, it will create a chat_226 folder containing the 
+chat_226.json and contacts_226.json files, along with all media files associated with the chat 
+and the contacts’ profile images.
 
 ## Support
 
