@@ -102,13 +102,7 @@ WABackup directory. Inside this directory, it will create a chat_226 folder cont
 chat_226.json and contacts_226.json files, along with all media files associated with the chat 
 and the contacts’ profile images.
 
-## Support
-
-Comments and suggestions are welcome. Feel free to add them in the [_Discussions_](https://github.com/domingogallardo/WABackupExtractor/discussions) section.
-
-Enjoy using WABackupExtractor!🎉🚀💻
-
-## Example `chat_<id>_info.json` file
+### Example `chat_<id>_info.json` file
 
 This file contains both the metadata of the chat and the list of participants (with their profile photo filenames if available):
 
@@ -137,3 +131,9 @@ This file contains both the metadata of the chat and the list of participants (w
   }
 }
 ```
+
+## Support
+
+Comments and suggestions are welcome. Feel free to add them in the [_Discussions_](https://github.com/domingogallardo/WABackupExtractor/discussions) section.
+
+Enjoy using WABackupExtractor!🎉🚀💻
