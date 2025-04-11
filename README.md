@@ -107,3 +107,33 @@ and the contacts’ profile images.
 Comments and suggestions are welcome. Feel free to add them in the [_Discussions_](https://github.com/domingogallardo/WABackupExtractor/discussions) section.
 
 Enjoy using WABackupExtractor!🎉🚀💻
+
+## Example `chat_<id>_info.json` file
+
+This file contains both the metadata of the chat and the list of participants (with their profile photo filenames if available):
+
+```json
+{
+  "contacts": [
+    {
+      "name": "Me",
+      "phone": "34987654321",
+      "photoFilename": "34987654321.jpg"
+    },
+    {
+      "name": "Laura Pérez",
+      "phone": "34611112222",
+      "photoFilename": "34611112222.jpg"
+    }
+  ],
+  "chat": {
+    "id": 3,
+    "name": "Laura Pérez",
+    "contactJid": "34611112222@s.whatsapp.net",
+    "chatType": "individual",
+    "numberMessages": 3051,
+    "lastMessageDate": "2025-03-07 15:11:45",
+    "isArchived": false
+  }
+}
+```
