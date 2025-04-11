@@ -45,17 +45,10 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
 let userOptions: UserOptions = parseCommandLineArguments()
 let outputDirectoryURL = getOutputDirectoryURL(userOptions: userOptions)
 createDirectory(url: outputDirectoryURL)
-let outputContactDirectoryURL = outputDirectoryURL.appendingPathComponent("contacts", isDirectory: true)
-createDirectory(url: outputContactDirectoryURL)
 
 do {
     let waDatabase = try api.connectChatStorageDb(from: backupToUse)
     let chats: [ChatInfo] = try api.getChats(from: waDatabase)
-    var contacts: [ContactInfo] = try api.getContacts(chats: chats, directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase)
-    if let userProfile = try api.getUserProfile(directoryToSaveMedia: outputContactDirectoryURL, from: waDatabase) {
-        contacts.append(userProfile)
-    }
-
     if let chatId = userOptions.chatId {
         saveChatMessages(for: chatId,
                          with: outputDirectoryURL,
@@ -65,7 +58,6 @@ do {
     } else {
         if chats.count > 0 {
             saveChatsInfo(chats: chats, to: outputDirectoryURL)
-            saveContactsInfo(contacts: contacts, to: outputDirectoryURL)
             if userOptions.allChats {
                 for chat in chats {
                     saveChatMessages(for: chat.id,
@@ -207,10 +199,11 @@ func saveChatMessages(for chatId: Int,
     if numberMessages > 0 {
         let chatDirectoryURL = directoryURL.appendingPathComponent("chat_\(chatId)", isDirectory: true)
         createDirectory(url: chatDirectoryURL)
-        let messages = try! api.getChatMessages(chatId: chatId, directoryToSaveMedia: chatDirectoryURL, from: waDatabase)
+        let (messages, contactsInChat) = try! api.getChatMessages(chatId: chatId, directoryToSaveMedia: chatDirectoryURL, from: waDatabase)
         let outputFilename = "chat_\(chatId).json"
         let outputUrl = chatDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
         outputJSON(data: messages, to: outputUrl)
+        saveContactsInfo(contacts: contactsInChat, to: chatDirectoryURL)
     } else {
         print("No messages in chat \(chatId)")
     }
