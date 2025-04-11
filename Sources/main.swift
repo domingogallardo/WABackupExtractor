@@ -184,8 +184,8 @@ func saveChatsInfo(chats: [ChatInfo], to outputDirectoryURL: URL) {
     outputJSON(data: chats, to: outputUrl)
 }
 
-func saveContactsInfo(contacts: [ContactInfo], to outputDirectoryURL: URL) {
-    let outputFilename = "contacts.json"
+func saveContactsInfo(contacts: [ContactInfo], for chatId: Int, to outputDirectoryURL: URL) {
+    let outputFilename = "contacts_\(chatId).json"
     let outputUrl = outputDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
     outputJSON(data: contacts, to: outputUrl)
 }
@@ -203,7 +203,7 @@ func saveChatMessages(for chatId: Int,
         let outputFilename = "chat_\(chatId).json"
         let outputUrl = chatDirectoryURL.appendingPathComponent(outputFilename, isDirectory: false)
         outputJSON(data: messages, to: outputUrl)
-        saveContactsInfo(contacts: contactsInChat, to: chatDirectoryURL)
+        saveContactsInfo(contacts: contactsInChat, for: chatId, to: chatDirectoryURL)
     } else {
         print("No messages in chat \(chatId)")
     }
