@@ -98,8 +98,8 @@ WABackupExtractor -c 226
 ```
 
 Since no output directory is specified in this command, the application will create the default 
-WABackup directory. Inside this directory, it will create a chat_226 folder containing the 
-chat_226.json and contacts_226.json files, along with all media files associated with the chat 
+`WABackup` directory. Inside this directory, it will create a `chat_226` folder containing the 
+`chat_226.json` and `contacts_226.json` files, along with all media files associated with the chat 
 and the contacts’ profile images.
 
 ### Example `chat_<id>_info.json` file
