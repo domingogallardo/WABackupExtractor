@@ -52,14 +52,13 @@ let outputDirectoryURL = getOutputDirectoryURL(userOptions: userOptions)
 createDirectory(url: outputDirectoryURL)
 
 do {
-    let waDatabase = try api.connectChatStorageDb(from: backupToUse)
-    let chats: [ChatInfo] = try api.getChats(from: waDatabase)
+    try api.connectChatStorageDb(from: backupToUse)
+    let chats: [ChatInfo] = try api.getChats()
     if let chatId = userOptions.chatId {
         saveChatMessages(for: chatId,
                          with: outputDirectoryURL,
                          from: backupToUse,
-                         chats: chats,
-                         waDatabase: waDatabase)
+                         chats: chats)
     } else {
         if chats.count > 0 {
             saveChatsInfo(chats: chats, to: outputDirectoryURL)
@@ -68,8 +67,7 @@ do {
                     saveChatMessages(for: chat.id,
                                      with: outputDirectoryURL,
                                      from: backupToUse,
-                                     chats: chats,
-                                     waDatabase: waDatabase)
+                                     chats: chats)
                 }
             }
         } else {
@@ -198,8 +196,7 @@ func saveContactsInfo(contacts: [ContactInfo], for chatId: Int, to outputDirecto
 func saveChatMessages(for chatId: Int,
                       with directoryURL: URL,
                       from backupToUse: IPhoneBackup,
-                      chats: [ChatInfo],
-                      waDatabase: WADatabase) {
+                      chats: [ChatInfo]) {
     
     let numberMessages = chats.first { $0.id == chatId }?.numberMessages ?? 0
     if numberMessages > 0 {
@@ -209,9 +206,7 @@ func saveChatMessages(for chatId: Int,
         // 📨 Obtener mensajes y contactos del chat
         let (messages, contactsInChat) = try! api.getChatMessages(
             chatId: chatId,
-            directoryToSaveMedia: chatDirectoryURL,
-            from: waDatabase
-        )
+            directoryToSaveMedia: chatDirectoryURL)
 
         // 💬 Guardar mensajes
         let messagesFilename = "chat_\(chatId)_messages.json"
