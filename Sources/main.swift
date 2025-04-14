@@ -53,7 +53,11 @@ createDirectory(url: outputDirectoryURL)
 
 do {
     try api.connectChatStorageDb(from: backupToUse)
-    let chats: [ChatInfo] = try api.getChats()
+    let chatsDirectoryURL = outputDirectoryURL.appendingPathComponent("Chats", isDirectory: true)
+    createDirectory(url: chatsDirectoryURL)
+
+    let chats: [ChatInfo] = try api.getChats(directoryToSavePhotos: chatsDirectoryURL)
+    
     if let chatId = userOptions.chatId {
         saveChatMessages(for: chatId,
                          with: outputDirectoryURL,
@@ -61,7 +65,7 @@ do {
                          chats: chats)
     } else {
         if chats.count > 0 {
-            saveChatsInfo(chats: chats, to: outputDirectoryURL)
+            saveChatsInfo(chats: chats, to: chatsDirectoryURL)
             if userOptions.allChats {
                 for chat in chats {
                     saveChatMessages(for: chat.id,
