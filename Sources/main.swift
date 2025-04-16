@@ -24,6 +24,8 @@ struct ChatInfoExtended: Encodable {
 }
 
 // Main application
+// Primero, se comprueban los argumentos de la línea de comandos
+let userOptions: UserOptions = parseCommandLineArguments()
 
 // Initialize the API
 let api: WABackup = WABackup()
@@ -47,23 +49,19 @@ guard let backupToUse = selectBackup(availableBackups: availableBackups) else {
 }
 
 // Now parse command line options and set up output directories
-let userOptions: UserOptions = parseCommandLineArguments()
 let outputDirectoryURL = getOutputDirectoryURL(userOptions: userOptions)
 createDirectory(url: outputDirectoryURL)
 
 do {
     try api.connectChatStorageDb(from: backupToUse)
-    let chatsDirectoryURL = outputDirectoryURL.appendingPathComponent("Chats", isDirectory: true)
-    createDirectory(url: chatsDirectoryURL)
-
-    let chats: [ChatInfo] = try api.getChats(directoryToSavePhotos: chatsDirectoryURL)
-    
     if let chatId = userOptions.chatId {
-        saveChatMessages(for: chatId,
-                         with: outputDirectoryURL,
-                         from: backupToUse,
-                         chats: chats)
+        // Modo de chat individual: solo se procesa el chat indicado.
+        saveSingleChatMessages(for: chatId, with: outputDirectoryURL, from: backupToUse)
     } else {
+        let chatsDirectoryURL = outputDirectoryURL.appendingPathComponent("Chats", isDirectory: true)
+        createDirectory(url: chatsDirectoryURL)
+        let chats: [ChatInfo] = try api.getChats(directoryToSavePhotos: chatsDirectoryURL)
+    
         if chats.count > 0 {
             saveChatsInfo(chats: chats, to: chatsDirectoryURL)
             if userOptions.allChats {
@@ -86,31 +84,37 @@ do {
 // Auxiliary functions
 
 func printUsage() {
-    print("Usage: WABackupViewer  [-b <backup_id>] [-c <chat_id>] [-o <output_directory>]")
+    print("Usage: WABackupViewer  [-c <chat_id>] [-all] [-o <output_directory>]")
 }
 
 func getFlagArgument(currentIndex: Int, flag: String) -> String? {
     if currentIndex + 1 < CommandLine.arguments.count {
         return CommandLine.arguments[currentIndex + 1]
     } else {
+        print("Error: \(flag) flag requires a subsequent argument")
         printUsage()
-        fatalError("Error: \(flag) flag requires a subsequent argument")
+        exit(1)
     }
 }
 
 func parseCommandLineArguments() -> UserOptions {
-    var i = 0
     var userOptions = UserOptions()
+    var i = 1 // Empezamos en 1 para omitir el nombre del programa
+
     while i < CommandLine.arguments.count {
-        switch CommandLine.arguments[i] {
+        let arg = CommandLine.arguments[i]
+        switch arg {
         case "-o":
-            userOptions.outputDirectory = getFlagArgument(currentIndex: i, flag: "-o") ?? userOptions.outputDirectory
-            i += 1
+            if let value = getFlagArgument(currentIndex: i, flag: "-o") {
+                userOptions.outputDirectory = value
+                i += 1
+            }
         case "-c":
             if let chatIdStr = getFlagArgument(currentIndex: i, flag: "-c") {
                 guard let chatId = Int(chatIdStr) else {
+                    print("Error: Invalid chat ID \(chatIdStr)")
                     printUsage()
-                    fatalError("Error: Invalid chat ID \(chatIdStr)")
+                    exit(1)
                 }
                 userOptions.chatId = chatId
                 i += 1
@@ -119,10 +123,9 @@ func parseCommandLineArguments() -> UserOptions {
             userOptions.allChats = true
             userOptions.chatId = nil
         default:
-            if i != 0 { // Ignore the program name itself
-                printUsage()
-                fatalError("Error: Unexpected argument \(CommandLine.arguments[i])")
-            }
+            print("Error: Unexpected argument \(arg)")
+            printUsage()
+            exit(1)
         }
         i += 1
     }
@@ -208,9 +211,11 @@ func saveChatMessages(for chatId: Int,
         createDirectory(url: chatDirectoryURL)
 
         // 📨 Obtener mensajes y contactos del chat
-        let (messages, contactsInChat) = try! api.getChatMessages(
+        let chatDump = try! api.getChat(
             chatId: chatId,
             directoryToSaveMedia: chatDirectoryURL)
+        let messages = chatDump.messages
+        let contactsInChat = chatDump.contacts
 
         // 💬 Guardar mensajes
         let messagesFilename = "chat_\(chatId)_messages.json"
@@ -254,13 +259,41 @@ func outputJSON<T: Encodable>(data: T, to outputUrl: URL) {
     }
 }
 
+func saveSingleChatMessages(for chatId: Int,
+                              with directoryURL: URL,
+                              from backupToUse: IPhoneBackup) {
+    let chatDirectoryURL = directoryURL.appendingPathComponent("chat_\(chatId)", isDirectory: true)
+    createDirectory(url: chatDirectoryURL)
+
+    // Obtener mensajes, contactos y la información del chat indicado.
+    let chatDump = try! api.getChat(chatId: chatId, directoryToSaveMedia: chatDirectoryURL)
+    let messages = chatDump.messages
+    let chatInfo = chatDump.chatInfo
+    let contactsInChat = chatDump.contacts
+
+    // Guardar mensajes
+    if messages.count > 0 {
+        let messagesFilename = "chat_\(chatId)_messages.json"
+        let messagesUrl = chatDirectoryURL.appendingPathComponent(messagesFilename, isDirectory: false)
+        outputJSON(data: messages, to: messagesUrl)
+    } else {
+        print("No messages in chat \(chatId)")
+    }
+
+    // Guardar la información del chat junto con sus contactos
+    let chatInfoExtended = ChatInfoExtended(chat: chatInfo, contacts: contactsInChat)
+    let chatInfoFilename = "chat_\(chatId)_info.json"
+    let chatInfoUrl = chatDirectoryURL.appendingPathComponent(chatInfoFilename, isDirectory: false)
+    outputJSON(data: chatInfoExtended, to: chatInfoUrl)
+}
+
 func outputJSON<T: Encodable>(data: [T], to outputUrl: URL) {
     let jsonEncoder = JSONEncoder()
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
     jsonEncoder.dateEncodingStrategy = .formatted(formatter)
     jsonEncoder.outputFormatting = .prettyPrinted // Optional: if you want the JSON output to be indented
-
+    
     do {
         let jsonData = try jsonEncoder.encode(data)
         if let jsonString = String(data: jsonData, encoding: .utf8) {
@@ -277,3 +310,4 @@ func outputJSON<T: Encodable>(data: [T], to outputUrl: URL) {
         print("Failed to encode data to JSON: \(error)")
     }
 }
+
