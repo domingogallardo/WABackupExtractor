@@ -64,9 +64,9 @@ After installing the application, you can use it as follows:
 WABackupExtractor [-c <chat_id>] [-o <output_directory>] [-all]
 ```
 
-By default, the application creates a WABackup directory. Inside it, a Chats/ subdirectory is created, 
-where it saves a chats.json file containing all chat metadata and the corresponding profile pictures 
-of each chat as separate .jpg or .thumb files.
+By default, the application creates a `WABackup` directory. Inside it, a `Chats/` subdirectory is created, 
+where it saves a `chats.json` file containing all chat metadata and the corresponding profile pictures 
+of each chat as separate `.jpg` or `.thumb` files.
 
 Upon launching the application, if more than one backup is available, the user will be presented with a list of backups to choose from. If only one backup is available, it will be selected automatically.
 
