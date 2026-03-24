@@ -235,12 +235,15 @@ func saveChatMessages(for chatId: Int,
     }
 }
 
-func outputJSON<T: Encodable>(data: T, to outputUrl: URL) {
+func makeJSONEncoder() -> JSONEncoder {
     let jsonEncoder = JSONEncoder()
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-    jsonEncoder.dateEncodingStrategy = .formatted(formatter)
-    jsonEncoder.outputFormatting = .prettyPrinted
+    jsonEncoder.dateEncodingStrategy = .iso8601
+    jsonEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    return jsonEncoder
+}
+
+func outputJSON<T: Encodable>(data: T, to outputUrl: URL) {
+    let jsonEncoder = makeJSONEncoder()
 
     do {
         let jsonData = try jsonEncoder.encode(data)
@@ -288,11 +291,7 @@ func saveSingleChatMessages(for chatId: Int,
 }
 
 func outputJSON<T: Encodable>(data: [T], to outputUrl: URL) {
-    let jsonEncoder = JSONEncoder()
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-    jsonEncoder.dateEncodingStrategy = .formatted(formatter)
-    jsonEncoder.outputFormatting = .prettyPrinted // Optional: if you want the JSON output to be indented
+    let jsonEncoder = makeJSONEncoder()
     
     do {
         let jsonData = try jsonEncoder.encode(data)
@@ -310,4 +309,3 @@ func outputJSON<T: Encodable>(data: [T], to outputUrl: URL) {
         print("Failed to encode data to JSON: \(error)")
     }
 }
-

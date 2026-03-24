@@ -76,6 +76,10 @@ specific chat using the `-c <chat_id>` flag. This will create a `chat_<id>` fold
 and the contacts for that chat (in `chat_<id>_info.json`). Contacts’ profile images are saved in 
 the same folder if available.
 
+Message JSON files follow the `SwiftWABackupAPI` public contract. Since version `1.4.2`, message
+authorship is exported through the nested `author` object instead of the old top-level
+`senderName` and `senderPhone` fields.
+
 The output directory can be customized using the `-o <output_directory>` flag. It 
 can either be an absolute path (starting with a slash) or a relative path to the current directory.
 
@@ -150,11 +154,41 @@ This file contains both the metadata of the chat and the list of participants (w
     "contactJid": "34611112222@s.whatsapp.net",
     "chatType": "individual",
     "numberMessages": 3051,
-    "lastMessageDate": "2025-03-07 15:11:45",
+    "lastMessageDate": "2025-03-07T15:11:45Z",
     "isArchived": false
   }
 }
 ```
+
+### Example `chat_<id>_messages.json` excerpt
+
+Message files encode author identity inside `author`:
+
+```json
+[
+  {
+    "author": {
+      "displayName": "Laura Pérez",
+      "jid": "34611112222@s.whatsapp.net",
+      "kind": "participant",
+      "phone": "34611112222",
+      "source": "chatSession"
+    },
+    "chatId": 3,
+    "date": "2025-03-07T15:12:01Z",
+    "id": 98124,
+    "isFromMe": false,
+    "message": "Vale, te lo llevo mañana.",
+    "messageType": "Text"
+  }
+]
+```
+
+Notes:
+
+- Top-level `senderName` and `senderPhone` are no longer exported.
+- Use `author.displayName`, `author.phone`, and `author.kind` when consuming message JSON.
+- Dates are serialized as ISO 8601 timestamps with timezone information.
 
 ## Support
 
