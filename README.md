@@ -76,9 +76,15 @@ specific chat using the `-c <chat_id>` flag. This will create a `chat_<id>` fold
 and the contacts for that chat (in `chat_<id>_info.json`). Contacts’ profile images are saved in 
 the same folder if available.
 
-Message JSON files follow the `SwiftWABackupAPI` public contract. Since version `1.4.2`, message
-authorship is exported through the nested `author` object instead of the old top-level
-`senderName` and `senderPhone` fields.
+Message JSON files follow the `SwiftWABackupAPI` public contract. Message identity is exported
+through structured nested objects instead of the old top-level `senderName` and `senderPhone`
+fields:
+
+- `author` for normal user-authored messages
+- `eventActor` for status/system rows that refer to a participant but are not normal authored messages
+
+The extractor does not reinterpret these fields on its own; it serializes them exactly as produced
+by `SwiftWABackupAPI`.
 
 The output directory can be customized using the `-o <output_directory>` flag. It 
 can either be an absolute path (starting with a slash) or a relative path to the current directory.
@@ -162,7 +168,7 @@ This file contains both the metadata of the chat and the list of participants (w
 
 ### Example `chat_<id>_messages.json` excerpt
 
-Message files encode author identity inside `author`:
+Normal authored messages use `author`:
 
 ```json
 [
@@ -187,8 +193,32 @@ Message files encode author identity inside `author`:
 Notes:
 
 - Top-level `senderName` and `senderPhone` are no longer exported.
-- Use `author.displayName`, `author.phone`, and `author.kind` when consuming message JSON.
+- Use `author` for real message authorship.
+- Use `eventActor` for status/system rows when there is a participant associated with the event.
+- Do not assume every message has a real phone-bearing author.
 - Dates are serialized as ISO 8601 timestamps with timezone information.
+
+Example of a status/system row:
+
+```json
+[
+  {
+    "chatId": 3,
+    "date": "2025-03-07T15:12:01Z",
+    "eventActor": {
+      "displayName": "Laura Pérez",
+      "jid": "34611112222@s.whatsapp.net",
+      "kind": "participant",
+      "phone": "34611112222",
+      "source": "chatSession"
+    },
+    "id": 98130,
+    "isFromMe": false,
+    "message": "Status sync from Laura Pérez",
+    "messageType": "Status"
+  }
+]
+```
 
 ## Support
 
